@@ -1,16 +1,19 @@
 library(tidyverse)
-
-
+library("lidR")
 
 df = tibble(
   file_name = c(1),
-  plot = c(1)
+  plot = c(1),
   campaign = c(1),
   quality = c(1),
   registered = c(1),
   clipped = c(1),
   height_norm = c(1),
 )
+
+df$file_name <- as.character(df$file_name)
+df$campaign <- as.character(df$campaign)
+df$plot <- as.character(df$plot)
 
 las_files <- list.files(
   '/Volumes/Extreme SSD',
@@ -32,15 +35,14 @@ file_i
 las = readLAS(file_i, filter = '-keep_random_fraction 0.0001')
 
 lidR::plot(las)
-
-file_i = 1
+# x = readLAS(las_files[i-1], filter = '-keep_random_fraction 0.00000000001')
 
 df = df %>%
   add_row(
     file_name = file_i,
-    campaign = 1,
-    plot = 2,
-    quality = 2,
+    campaign = str_extract(file_i, "c\\d+"),
+    plot = str_match(file_i, "p(\\d+)")[,2],
+    quality = 0,
     registered = 1,
     clipped = 1,
     height_norm = 1,
