@@ -22,7 +22,7 @@ las_files <- list.files(
   pattern = 'las$'
 )
 
-i = 1
+i = 120
 
 
 
@@ -44,12 +44,12 @@ df = df %>%
     plot = str_match(file_i, "p(\\d+)")[,2],
     quality = 0,
     registered = 1,
-    clipped = 1,
+    clipped = 0,
     height_norm = 1,
   )
 
-i = i + 1
+i = i - 1
 
 ###############
 
-write_csv(df, "filename.csv")
+write_csv(df, "plot_check.csv")
