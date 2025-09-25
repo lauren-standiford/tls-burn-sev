@@ -1,19 +1,20 @@
 library(tidyverse)
 library("lidR")
 
-df = tibble(
-  file_name = c(1),
-  plot = c(1),
-  campaign = c(1),
-  quality = c(1),
-  registered = c(1),
-  clipped = c(1),
-  height_norm = c(1),
-)
-
+# df = tibble(
+#   file_name = c(1),
+#   plot = c(1),
+#   campaign = c(1),
+#   quality = c(1),
+#   registered = c(1),
+#   clipped = c(1),
+#   height_norm = c(1),
+# )
 df$file_name <- as.character(df$file_name)
 df$campaign <- as.character(df$campaign)
 df$plot <- as.character(df$plot)
+
+df <- read.csv("https://raw.githubusercontent.com/lauren-standiford/tls-burn-sev/refs/heads/main/plot_check.csv")
 
 las_files <- list.files(
   '/Volumes/Extreme SSD',
@@ -27,7 +28,6 @@ i = 120
 
 
 ###################
-
 
 file_i = las_files[i]
 
@@ -44,12 +44,17 @@ df = df %>%
     plot = str_match(file_i, "p(\\d+)")[,2],
     quality = 0,
     registered = 1,
-    clipped = 0,
+    clipped = 1,
     height_norm = 1,
   )
 
-i = i - 1
+i = i + 1
+
+
+# range_x3 <- range(las@data$Z)
+
+# df[66, "clipped"] <- 1
 
 ###############
 
-write_csv(df, "plot_check.csv")
+write_csv(df, "plot_check_250925.csv")
