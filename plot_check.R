@@ -10,11 +10,12 @@ library("lidR")
 #   clipped = c(1),
 #   height_norm = c(1),
 # )
+
+df <- read.csv("https://raw.githubusercontent.com/lauren-standiford/tls-burn-sev/refs/heads/main/plot_check.csv")
+
 df$file_name <- as.character(df$file_name)
 df$campaign <- as.character(df$campaign)
 df$plot <- as.character(df$plot)
-
-df <- read.csv("https://raw.githubusercontent.com/lauren-standiford/tls-burn-sev/refs/heads/main/plot_check.csv")
 
 las_files <- list.files(
   '/Volumes/Extreme SSD',
@@ -23,19 +24,17 @@ las_files <- list.files(
   pattern = 'las$'
 )
 
-i = 120
-
-
+i = 31
 
 ###################
 
 file_i = las_files[i]
-
 file_i
+
 las = readLAS(file_i, filter = '-keep_random_fraction 0.0001')
 
 lidR::plot(las)
-# x = readLAS(las_files[i-1], filter = '-keep_random_fraction 0.00000000001')
+
 
 df = df %>%
   add_row(
@@ -50,11 +49,28 @@ df = df %>%
 
 i = i + 1
 
+###############
 
-# range_x3 <- range(las@data$Z)
+c1_range_x2 <- range(las@data$X)
+c1_range_y2 <- range(las@data$Y)
+c1_range_z2 <- range(las@data$Z)
 
 # df[66, "clipped"] <- 1
 
 ###############
 
-write_csv(df, "plot_check_250925.csv")
+write_csv(df, "plot_check.csv")
+
+###############
+
+# file_i = las_files[i]
+# file_i
+# las = readLAS(file_i, filter = '-keep_random_fraction 0.000000000000001')
+# st_crs(las)
+# las = readLAS(file_i)
+# st_crs(las) = st_crs(x)
+# st_crs(las)
+# i = i + 1
+
+# x = readLAS(las_files[i = 39], filter = '-keep_random_fraction 0.00000000001')
+# st_crs(x)
