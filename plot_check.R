@@ -12,6 +12,7 @@ library("lidR")
 # )
 
 df <- read.csv("https://raw.githubusercontent.com/lauren-standiford/tls-burn-sev/refs/heads/main/plot_check.csv")
+campaigns <- read.csv("/Users/Lauren/Desktop/TLS_burn_severity/Campaign-Grid-view.csv")
 
 df$file_name <- as.character(df$file_name)
 df$campaign <- as.character(df$campaign)
@@ -24,7 +25,7 @@ las_files <- list.files(
   pattern = 'las$'
 )
 
-las_files <- list.files(
+las_files_c5c12 <- list.files(
   '/Volumes/tls',
   full.names = T,
   recursive = T,
@@ -33,7 +34,7 @@ las_files <- list.files(
 
 i = 8
 
-###################
+################### view las files and add to QC df ###################
 
 file_i = las_files[i]
 file_i
@@ -55,31 +56,54 @@ df = df %>%
 
 i = i + 1
 
-###############
-
-c15_range_x <- range(las@data$X)
-# c1_range_y <- range(las@data$Y)
-# c1_range_z <- range(las@data$Z)
-
-# df[66, "clipped"] <- 1
-
-###############
+############### write csv ###################
 
 write_csv(df, "plot_check.csv")
 
-###############
+############### check ranges/update df value ###################
 
-# i = 78
-# 
-# file_i = las_files[i]
-# file_i
+c15_range_x <- range(las@data$X)
+c1_range_y <- range(las@data$Y)
+range_z <- range(las@data$Z)
+
+df[104, "quality"] <- 1
+
+############### update CRS ###################
+
+i = 8
+
+file_i = las_files[i]
+file_i
 # las = readLAS(file_i, filter = '-keep_random_fraction 0.000000000000001')
 # st_crs(las)
-# las = readLAS(file_i)
-# st_crs(las) = st_crs(x)
-# st_crs(las)
-# writeLAS(las, file_i)
-# i = i + 1
-# 
-# x = readLAS(las_files[i = 39], filter = '-keep_random_fraction 0.00000000001')
-# st_crs(x)
+las = readLAS(file_i)
+st_crs(las) = st_crs(x)
+st_crs(las)
+writeLAS(las, file_i)
+i = i + 1
+
+x = readLAS(las_files[i = 1], filter = '-keep_random_fraction 0.00000000001')
+st_crs(x)
+
+############### plot pre/post together ###################
+
+library(rgl)
+
+i = 84
+file_i = las_files[i]
+file_i
+
+las = readLAS(file_i, filter = '-keep_random_fraction 0.0001')
+las2 = readLAS(file_i, filter = '-keep_random_fraction 0.0001')
+
+x = lidR::plot(las, pal = "red")
+
+lidR::plot(las2, pal = "blue", add = x)
+
+range_z <- range(las@data$Z)
+range_z2 <- range(las2@data$Z)
+
+st_crs(las) == st_crs(las2)
+
+st_crs(las)
+st_crs(las2)
