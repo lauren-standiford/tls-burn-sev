@@ -24,7 +24,14 @@ las_files <- list.files(
   pattern = 'las$'
 )
 
-i = 31
+las_files <- list.files(
+  '/Volumes/tls',
+  full.names = T,
+  recursive = T,
+  pattern = 'las$'
+)
+
+i = 8
 
 ###################
 
@@ -34,7 +41,6 @@ file_i
 las = readLAS(file_i, filter = '-keep_random_fraction 0.0001')
 
 lidR::plot(las)
-
 
 df = df %>%
   add_row(
@@ -51,9 +57,9 @@ i = i + 1
 
 ###############
 
-c1_range_x2 <- range(las@data$X)
-c1_range_y2 <- range(las@data$Y)
-c1_range_z2 <- range(las@data$Z)
+c15_range_x <- range(las@data$X)
+# c1_range_y <- range(las@data$Y)
+# c1_range_z <- range(las@data$Z)
 
 # df[66, "clipped"] <- 1
 
@@ -63,6 +69,8 @@ write_csv(df, "plot_check.csv")
 
 ###############
 
+# i = 78
+# 
 # file_i = las_files[i]
 # file_i
 # las = readLAS(file_i, filter = '-keep_random_fraction 0.000000000000001')
@@ -70,7 +78,8 @@ write_csv(df, "plot_check.csv")
 # las = readLAS(file_i)
 # st_crs(las) = st_crs(x)
 # st_crs(las)
+# writeLAS(las, file_i)
 # i = i + 1
-
+# 
 # x = readLAS(las_files[i = 39], filter = '-keep_random_fraction 0.00000000001')
 # st_crs(x)
