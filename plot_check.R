@@ -12,21 +12,30 @@ library("lidR")
 # )
 
 df <- read.csv("https://raw.githubusercontent.com/lauren-standiford/tls-burn-sev/refs/heads/main/plot_check.csv")
-campaigns <- read.csv("/Users/Lauren/Desktop/TLS_burn_severity/Campaign-Grid-view.csv")
+campaigns <- read.csv("C:/Users/Admin/Desktop/Campaign-Grid view.csv")
 
 df$file_name <- as.character(df$file_name)
 df$campaign <- as.character(df$campaign)
 df$plot <- as.character(df$plot)
 
+# las_files <- list.files(
+#   '/Volumes/Extreme SSD',
+#   full.names = T,
+#   recursive = T,
+#   pattern = 'las$'
+# )
+
+# on macOS
 las_files <- list.files(
-  '/Volumes/Extreme SSD',
+  '/Volumes/tls',
   full.names = T,
   recursive = T,
   pattern = 'las$'
 )
 
-las_files_c5c12 <- list.files(
-  '/Volumes/tls',
+# on windows
+las_files <- list.files(
+  'E:/',
   full.names = T,
   recursive = T,
   pattern = 'las$'
@@ -93,10 +102,10 @@ i = 84
 file_i = las_files[i]
 file_i
 
-las = readLAS(file_i, filter = '-keep_random_fraction 0.0001')
+las1 = readLAS(file_i, filter = '-keep_random_fraction 0.0001')
 las2 = readLAS(file_i, filter = '-keep_random_fraction 0.0001')
 
-x = lidR::plot(las, pal = "red")
+x = lidR::plot(las1, pal = "red")
 
 lidR::plot(las2, pal = "blue", add = x)
 
