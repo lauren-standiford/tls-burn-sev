@@ -1,13 +1,12 @@
 library(lidR)
 library(stringr)
-library(rcsf)
 
-tls <- "/Volumes/tls"
+tls <- "E:/"
 
 c <- c("c1", "c6")
 
 files <- list.files(
-  '/Volumes/tls',
+  tls,
   full.names = T,
   recursive = T,
   pattern = 'las$'
@@ -21,11 +20,17 @@ initial_c_files <- c(c1_files, c6_files)
 # file = initial_c_files[1]
 # las = readLAS(file, filter = '-keep_random_fraction 0.0001')
 
-for (file in initial_c_files) {
+i = 2
 
+for (file in initial_c_files) {
+  
+  message('Processing ', file)
+  message(i, ' of ', length(initial_c_files))
+  tictoc::tic()
   las <- readLAS(file)
 
   classified_las <- classify_ground(las, algorithm = csf())
+  tictoc::toc()
 
   # classified_file_name <- str_replace(file, "\\.las$", "_grndcls.las")
   # 
@@ -36,5 +41,7 @@ for (file in initial_c_files) {
   dtm_file_name <- str_replace(file, "\\.las$", "_dtm.tif")
 
   terra::writeRaster(dtm, dtm_file_name, overwrite = TRUE)
+  
+  i = i + 1
 
 }
