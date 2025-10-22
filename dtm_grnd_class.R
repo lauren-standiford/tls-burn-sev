@@ -61,15 +61,14 @@ files <- list.files(
 
 c1_files <- str_subset(files, "\\bc1\\b|\\bc1_dtms\\b")
 
-file.info <- data.frame(
+file_info <- data.frame(
   file = c1_files,
   plot = str_extract(basename(c1_files), "\\d{4}"),
   type = str_extract(c1_files, "\\.(tif|las)$")
 )
 
-dtm_files <- subset(file.info, type == ".tif")
-las_files <- subset(file.info, type == ".las")
-
+dtm_files <- subset(file_info, type == ".tif")
+las_files <- subset(file_info, type == ".las")
 matched <- merge(dtm_files, las_files, by = "plot", suffixes = c(".tif", ".las"))
 
 i = 1
@@ -77,15 +76,22 @@ i = 1
 for (i in seq_len(nrow(matched))) {
   las_file <- matched$file.las[i]
   dtm_file <- matched$file.tif[i]
-  
+  tictoc::tic()
   las <- readLAS(las_file)
-  dtm <- rast(dtm_file)
+  dtm <- terra::rast(dtm_file)
+  tictoc::toc()
   
+  tictoc::tic()
   las_norm <- las - dtm
+  tictoc::toc()
+  # las_check = readLAS(las_norm, filter = '-keep_random_fraction 0.0001')
+  # lidR::plot(las_check)
   
-  htnorm_file_name <- str_replace(las_norm, "\\.las$", "_htnorm.las")
-
+  htnorm_file_name <- str_replace(las_file, "\\.las$", "_htnorm.las")
+  
+  tictoc::tic()
   writeLAS(las_norm, htnorm_file_name)
+  tictoc::toc()
   
   i = i + 1
 }
