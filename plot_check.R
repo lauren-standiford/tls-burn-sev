@@ -38,7 +38,7 @@ las_files <- list.files(
   'E:/',
   full.names = T,
   recursive = T,
-  pattern = 'las$'
+  pattern = '\\.(tif|las)$'
 )
 
 i = 8
@@ -79,7 +79,7 @@ df[104, "quality"] <- 1
 
 ############### update CRS ###################
 
-i = 8
+i = 1
 
 file_i = las_files[i]
 file_i
@@ -91,8 +91,31 @@ st_crs(las)
 writeLAS(las, file_i)
 i = i + 1
 
-x = readLAS(las_files[i = 1], filter = '-keep_random_fraction 0.00000000001')
+###
+
+c5_files <- str_subset(las_files, "\\bc5\\b")
+
+x = readLAS(las_files[i = 27], filter = '-keep_random_fraction 0.00000000001')
 st_crs(x)
+
+
+for (file_i in c5_files) {
+  file_i = c5_files[i]
+  file_i
+  message('Processing ', file_i)
+  message(i, ' of ', length(c5_files))
+  tictoc::tic()
+  
+  # las = readLAS(file_i, filter = '-keep_random_fraction 0.000000000000001')
+  # st_crs(las)
+  las = readLAS(file_i)
+  st_crs(las) = st_crs(x)
+  #st_crs(las)
+  writeLAS(las, file_i)
+  tictoc::toc()
+  
+  i = i + 1
+}
 
 ############### plot pre/post together ###################
 
