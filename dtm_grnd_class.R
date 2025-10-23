@@ -52,19 +52,19 @@ for (file in initial_c_files) {
 
 tls <- "E:/"
 
-files <- list.files(
+all_files <- list.files(
   tls,
   full.names = T,
   recursive = T,
   pattern = '\\.(tif|las)$'
 )
 
-c1_files <- str_subset(files, "\\bc1\\b|\\bc1_dtms\\b")
+files <- str_subset(all_files, "\\bc5\\b|\\bc1_dtms\\b")
 
 file_info <- data.frame(
-  file = c1_files,
-  plot = str_extract(basename(c1_files), "\\d{4}"),
-  type = str_extract(c1_files, "\\.(tif|las)$")
+  file = files,
+  plot = str_extract(basename(files), "\\d{4}"),
+  type = str_extract(files, "\\.(tif|las)$")
 )
 
 dtm_files <- subset(file_info, type == ".tif")
@@ -76,25 +76,28 @@ i = 1
 for (i in seq_len(nrow(matched))) {
   las_file <- matched$file.las[i]
   dtm_file <- matched$file.tif[i]
+  
+  message('Processing ', las_file)
+  # message(i, ' of ', length(matched))
+  
   tictoc::tic()
   las <- readLAS(las_file)
   dtm <- terra::rast(dtm_file)
-  tictoc::toc()
   
-  tictoc::tic()
   las_norm <- las - dtm
-  tictoc::toc()
-  # las_check = readLAS(las_norm, filter = '-keep_random_fraction 0.0001')
-  # lidR::plot(las_check)
   
   htnorm_file_name <- str_replace(las_file, "\\.las$", "_htnorm.las")
   
-  tictoc::tic()
+  # las_check = readLAS(htnorm_file_name, filter = '-keep_random_fraction 0.0001')
+  # lidR::plot(las_check)
+  
   writeLAS(las_norm, htnorm_file_name)
   tictoc::toc()
   
   i = i + 1
 }
+
+
 
 
 
