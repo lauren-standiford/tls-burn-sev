@@ -99,15 +99,12 @@ x = readLAS(las_files[i = 27], filter = '-keep_random_fraction 0.00000000001')
 st_crs(x)
 
 
-for (file_i in c5_files) {
-  file_i = c5_files[i]
+for (fifile_ifor (file_i in c5_files) {
+  file_i = c5_files[5]
   file_i
   message('Processing ', file_i)
   message(i, ' of ', length(c5_files))
   tictoc::tic()
-  
-  # las = readLAS(file_i, filter = '-keep_random_fraction 0.000000000000001')
-  # st_crs(las)
   las = readLAS(file_i)
   st_crs(las) = st_crs(x)
   #st_crs(las)
@@ -116,6 +113,9 @@ for (file_i in c5_files) {
   
   i = i + 1
 }
+
+las = readLAS(file_i, filter = '-keep_random_fraction 0.000000000000001')
+st_crs(las)
 
 ############### plot pre/post together ###################
 
