@@ -11,7 +11,7 @@ files <- list.files(
   tls,
   full.names = T,
   recursive = T,
-  pattern = 'las$'
+  pattern = '3m.las$'
 )
 
 c1_files <- str_subset(files, "\\bc1\\b")
@@ -19,36 +19,50 @@ c6_files <- str_subset(files, "\\bc6\\b")
 
 initial_c_files <- c(c1_files, c6_files)
 
+file = c6_files[1]
+
 # file = initial_c_files[1]
 # las = readLAS(file, filter = '-keep_random_fraction 0.0001')
 
-i = 2
+i = 1
+c6_files = c6_files[i:length(c6_files)]
 
-for (file in initial_c_files) {
+for (file in c6_files) {
   
   message('Processing ', file)
-  message(i, ' of ', length(initial_c_files))
+  message(i, ' of ', length(c6_files))
   tictoc::tic()
   las <- readLAS(file)
 
-  classified_las <- classify_ground(las, algorithm = csf())
-  tictoc::toc()
+  # classified_las <- classify_ground(las, algorithm = csf())
 
   # classified_file_name <- str_replace(file, "\\.las$", "_grndcls.las")
   # 
   # writeLAS(classified_las, classified_file_name)
 
-  dtm <- rasterize_terrain(classified_las, res = 0.25, algorithm = tin())
+  # dtm <- rasterize_terrain(classified_las, res = 0.25, algorithm = tin())
+  
+  dtm <- rasterize_terrain(las, res = 0.25, algorithm = tin())
 
   dtm_file_name <- str_replace(file, "\\.las$", "_dtm.tif")
 
   terra::writeRaster(dtm, dtm_file_name, overwrite = TRUE)
   
+  las_norm <- las - dtm
+  
+  htnorm_file_name <- str_replace(file, "\\.las$", "_htnorm.las")
+  
+  writeLAS(las_norm, htnorm_file_name)
+  
+  tictoc::toc()
+  
   i = i + 1
 
 }
 
-############ ht normalization ############
+
+
+ ############ ht normalization ############
 
 tls <- "E:/"
 
@@ -59,11 +73,12 @@ all_files <- list.files(
   pattern = '\\.(tif|las)$'
 )
 
-files <- str_subset(all_files, "\\bc5\\b|\\bc1_dtms\\b")
+# files <- str_subset(all_files, "\\bc10\\b*m\\.las|\\bc6_dtms\\b")
+files <- str_subset(all_files, "(c6_dtms|c10.*3m\\.las$)")
 
 file_info <- data.frame(
   file = files,
-  plot = str_extract(basename(files), "\\d{4}"),
+  plot = str_extract(basename(files), "p\\d{1,4}"),
   type = str_extract(files, "\\.(tif|las)$")
 )
 
@@ -78,7 +93,7 @@ for (i in seq_len(nrow(matched))) {
   dtm_file <- matched$file.tif[i]
   
   message('Processing ', las_file)
-  # message(i, ' of ', length(matched))
+  message(i, ' of ', nrow(matched))
   
   tictoc::tic()
   las <- readLAS(las_file)
@@ -87,65 +102,31 @@ for (i in seq_len(nrow(matched))) {
   las_norm <- las - dtm
   
   htnorm_file_name <- str_replace(las_file, "\\.las$", "_htnorm.las")
-  
-  # las_check = readLAS(htnorm_file_name, filter = '-keep_random_fraction 0.0001')
-  # lidR::plot(las_check)
-  
+
   writeLAS(las_norm, htnorm_file_name)
   tictoc::toc()
   
   i = i + 1
 }
 
+las_check = readLAS(htnorm_file_name, filter = '-keep_random_fraction 0.0001')
+plot(las_check)
 
+las_check = readLAS("E:/c6/c6_tls_p11_200817_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.0001')
+x = lidR::plot(las_check, color = "Classification")
+add_dtm3d(x, dtm)
+classified_las = las_check
 
+x = plot(decimate_points(las_norm, random(100)))
+add_dtm3d(x, dtm)
 
+#### checking
 
-############ junk code while i was trying to figure out the ht norm stuff #############
+c6_files <- str_subset(all_files, "\\bc6\\b")
+las_norm <- str_subset(c6_files, "norm\\.las$")
+file_i <- las_norm[1]
 
-# c6_las <- str_subset(files, "\\bc6\\b")
-c1_tif <- str_subset(files, "\\bc1_dtms\\b")
-# c6_tif <- str_subset(files, "\\bc6_dtms\\b")
-
-c1_matched <- merge(c1_las, c1_tif, by = "", suffixes = c("tif", "las"))
-las_tif_files <- c(c1_las, c6_las, c1_tif, c6_tif)
-
-# file = initial_c_files[1]
-# las = readLAS(file, filter = '-keep_random_fraction 0.0001')
-
-###########
-
-dtm_files <- str_subset(files, "\\bc1_dtms\\b")
-las_files <- str_subset(files, "\\bc1\\b")
-
-file.info <- data.frame(
-  file = 
-)
-
-############
-
-i = 2
-
-for (file in las_tif_files) {
-  
-  message('Processing ', file)
-  message(i, ' of ', length(las_tif_files))
-  tictoc::tic()
-  las <- readLAS(file)
-  
-  dtm <- terra::rast("")
-  tictoc::toc()
-  
-  # classified_file_name <- str_replace(file, "\\.las$", "_grndcls.las")
-  # 
-  # writeLAS(classified_las, classified_file_name)
-  
-  dtm <- rasterize_terrain(classified_las, res = 0.25, algorithm = tin())
-  
-  htnorm_file_name <- str_replace(file, "\\.las$", "_htnorm.las")
-  
-  terra::writeRaster(dtm, dtm_file_name, overwrite = TRUE)
-  
-  i = i + 1
-  
+for(file_i in las_norm) {
+  las <- readLAS(file_i)
 }
+
