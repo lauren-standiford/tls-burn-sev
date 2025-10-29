@@ -135,6 +135,7 @@ added_veg <- left_join(
   by = "plot",
   relationship = "many-to-one"
 )
+write_csv(added_veg, "E:/c6/prepost_veg_251028.csv")
 
 plot_info2 <- added_veg %>%
   group_by(plot, campaign, RBR_NN, LF_FOREST) %>%
