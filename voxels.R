@@ -113,6 +113,33 @@ plot_info <- plot_info %>%
       'Post'
     ))
 
-ggplot(plot_info, aes(x = prepost, y = perc, color = RBR_NN)) + 
+write_csv(plot_info, "E:/c6/prepost_251028.csv")
+
+p <- ggplot(plot_info, aes(x = prepost, y = perc, color = RBR_NN)) + 
   geom_point() +
-    geom_line(aes(group = plot))
+    geom_line(aes(group = plot)) +
+  labs(
+    x = "Wildfire status",
+    y = "% of filled voxels"
+  )
+
+ggsave("E:/first_plot.png", plot = p)
+
+####################
+
+veg_type <- read_csv("E:/plt_veg_type.csv")
+
+added_veg <- left_join(
+  plot_info %>% mutate(plot = gsub("^p", "", plot)),
+  veg_type %>% mutate(plot = as.character(plot)),
+  by = "plot",
+  relationship = "many-to-one"
+)
+
+plot_info2 <- added_veg %>%
+  group_by(plot, campaign, RBR_NN, LF_FOREST) %>%
+  summarize(
+    sum_filled = sum(n_filled),
+    total_vox = sum(n_voxel),
+    perc = sum_filled/total_vox
+  )
