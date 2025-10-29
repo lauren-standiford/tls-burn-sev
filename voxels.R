@@ -2,6 +2,7 @@ library(lidR)
 library(tidyverse)
 
 tls <- "E:/"
+tls <- "/Volumes/tls"
 
 all_htnorm <- list.files(
   tls,
@@ -34,14 +35,16 @@ vox_filtered2 <- vox_met2[vox_met2$N2 >= 500 & vox_met2$N2 <= 4500, ]
 plot(vox_filtered2, color = "N2", pal = heat.colors, size = 0.5, bg = "white", voxel = TRUE)
 
 ##############################################
+####### generate voxels and metrics ##########
+##############################################
 
 c6c10_files <- str_subset(all_htnorm, "\\bc6\\b|\\bc10\\b")
 
-veg_df <- data.frame(
-  file = c6c10_files,
-  plot = str_extract(basename(c6c10_files), "p\\d{1,4}"),
-  veg_density = ""
-)
+# veg_df <- data.frame(
+#   file = c6c10_files,
+#   plot = str_extract(basename(c6c10_files), "p\\d{1,4}"),
+#   veg_density = ""
+# )
 
 i = 1
 file_i = c6c10_files[i]
@@ -82,7 +85,9 @@ for (file_i in c6c10_files) {
 things = bind_rows(x)
 write_csv(things, "E:/c6/things.csv")
 
-##########################
+##############################################
+############ add fire sev data ###############
+##############################################
 
 mtbs <- read_csv("E:/burn_severity_3dforests/kincade_glass_fire_tls_plot_centers_sentinel2a_20m_rbr.csv")
 
@@ -125,7 +130,9 @@ p <- ggplot(plot_info, aes(x = prepost, y = perc, color = RBR_NN)) +
 
 ggsave("E:/first_plot.png", plot = p)
 
-####################
+##############################################
+########## add forest type data ##############
+##############################################
 
 veg_type <- read_csv("E:/plt_veg_type.csv")
 
@@ -137,10 +144,31 @@ added_veg <- left_join(
 )
 write_csv(added_veg, "E:/c6/prepost_veg_251028.csv")
 
-plot_info2 <- added_veg %>%
-  group_by(plot, campaign, RBR_NN, LF_FOREST) %>%
-  summarize(
-    sum_filled = sum(n_filled),
-    total_vox = sum(n_voxel),
-    perc = sum_filled/total_vox
-  )
+#########
+
+added_veg <- read_csv("/Volumes/tls/prepost_veg_251028.csv")
+
+added_veg <- added_veg %>%
+  ungroup() %>%
+  mutate(prepost = case_match(
+    campaign,
+    'c6' ~ 'Pre',
+    'c10' ~ 'Post'
+  ) |>
+    fct_relevel(
+      'Pre',
+      'Post'
+    ))
+
+split_FR_plots <- ggplot(added_veg %>%
+         filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest") %>%
+         filter(!is.na(LF_FOREST)),
+       aes(x = prepost, y = perc, color = RBR_NN)) +
+  geom_point() +
+  geom_line(aes(group = plot)) +
+  facet_wrap(~ LF_FOREST) +
+  labs(x = "Wildfire status", y = "% of filled voxels") +
+  scale_color_gradient(low = "blue", high = "red", name = "RBR")
+
+print(split_FR_plots)
+ggsave("/Volumes/tls/figures/forest_type_split_plot.png", plot = split_FR_plots)
