@@ -2,6 +2,9 @@
 
 library(lidR)
 library(stringr)
+install.packages(lidRalignment)
+install.packages(c('lidR', 'lasR', 'lidRalignment'), repos = 'https://r-lidar.r-universe.dev')
+library(lidRalignment)
 
 las_files <- list.files(
   'E:/',
@@ -24,7 +27,7 @@ M <- matrix(c(
 
 las <- readLAS(file_i)
 
-las_transf <- lidR::transform_las(las, M)
+las_transf <- transform_las(las, M)
 
 las_check = readLAS(las_transf, filter = '-keep_random_fraction 0.0001')
 plot(las_check)

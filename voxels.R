@@ -85,6 +85,8 @@ for (file_i in c6c10_files) {
 things = bind_rows(x)
 write_csv(things, "E:/c6/things.csv")
 
+voxel_data = read_csv("E:/things.csv")
+
 ##############################################
 ############ add fire sev data ###############
 ##############################################
@@ -143,6 +145,7 @@ added_veg <- left_join(
   relationship = "many-to-one"
 )
 write_csv(added_veg, "E:/c6/prepost_veg_251028.csv")
+all_stuff = read_csv("E:/prepost_veg_251028.csv")
 
 #########
 
