@@ -86,15 +86,17 @@ things = bind_rows(x)
 write_csv(things, "E:/c6/things.csv")
 
 voxel_data = read_csv("E:/things.csv")
+voxel_data = read_csv("/Volumes/tls/things.csv")
 
 ##############################################
 ############ add fire sev data ###############
 ##############################################
 
 mtbs <- read_csv("E:/burn_severity_3dforests/kincade_glass_fire_tls_plot_centers_sentinel2a_20m_rbr.csv")
+mtbs <- read_csv("/Volumes/tls/burn_severity_3dforests/kincade_glass_fire_tls_plot_centers_sentinel2a_20m_rbr.csv")
 
 added_sev <- left_join(
-  things,
+  voxel_data,
   mtbs,
   by = c("plot" = "Plot"),
   relationship = "many-to-one"
@@ -146,6 +148,7 @@ added_veg <- left_join(
 )
 write_csv(added_veg, "E:/c6/prepost_veg_251028.csv")
 all_stuff = read_csv("E:/prepost_veg_251028.csv")
+all_stuff = read_csv("/Volumes/tls/prepost_veg_251028.csv")
 
 #########
 
