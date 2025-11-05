@@ -21,8 +21,6 @@ df2 = everything %>%
   select(Z, perc, LF_FOREST, sev_class, prepost) %>%
   group_by(Z, LF_FOREST, sev_class, prepost)
 
-
-
 df10 = df2 %>%
   rowwise() %>%
   mutate(
@@ -31,6 +29,7 @@ df10 = df2 %>%
   unnest(r) %>%
   ungroup()
 
+write_csv(df2, "/Volumes/tls/percentage_by_groups.csv")
 
 p = ggplot() +
   geom_violin(df10,
@@ -38,6 +37,24 @@ p = ggplot() +
   facet_wrap(~ sev_class)
 
 ggsave("/Volumes/tls/figures/violin_plot.png", plot = p)
+
+
+ggplot() +
+  geom_line(df10,
+            mapping = aes(perc, Z, color = LF_FOREST)) +
+  facet_wrap(~ sev_class)
+
+df_ordered_by_y <- df10 %>%
+  filter(!is.na(sev_class)) %>%
+  arrange(Z)
+
+p = ggplot(df_ordered_by_y,
+       mapping = aes(perc, Z, color = LF_FOREST, linetype = prepost)) +
+  # geom_point() +
+  geom_path() +
+  facet_grid(~ sev_class)
+
+ggsave("/Volumes/tls/figures/first_VVP_plot.png", plot = p)
 
 ## old janky stuff ########
 ########## get data together for ht layers ##########
