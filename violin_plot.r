@@ -1,6 +1,8 @@
 library(lidR)
 library(tidyverse)
 
+###### violin and VVP plots #########
+
 df = tibble(
   perc = runif(10),
   z = c(1, 1, 1, 1, 1, 2, 2, 2, 2, 2),
@@ -29,7 +31,7 @@ df10 = df2 %>%
   unnest(r) %>%
   ungroup()
 
-write_csv(df2, "/Volumes/tls/percentage_by_groups.csv")
+write_csv(everything, "/Volumes/tls/everything.csv")
 
 p = ggplot() +
   geom_violin(df10,
@@ -37,12 +39,6 @@ p = ggplot() +
   facet_wrap(~ sev_class)
 
 ggsave("/Volumes/tls/figures/violin_plot.png", plot = p)
-
-
-ggplot() +
-  geom_line(df10,
-            mapping = aes(perc, Z, color = LF_FOREST)) +
-  facet_wrap(~ sev_class)
 
 df_ordered_by_y <- df10 %>%
   filter(!is.na(sev_class)) %>%
@@ -55,6 +51,22 @@ p = ggplot(df_ordered_by_y,
   facet_grid(~ sev_class)
 
 ggsave("/Volumes/tls/figures/first_VVP_plot.png", plot = p)
+
+########## plot rbr vs biomass change ############
+
+df2 = everything %>%
+  filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest",
+         !is.na(LF_FOREST),
+         !is.na(RBR_NN),
+         Z >= 0) %>%
+  group_by(LF_FOREST, prepost) %>%
+  summarise(
+    total_filled = sum(n_filled),
+    total_overall = sum(n_voxel),
+    perc = total_filled/total_overall) %>%
+  # ungroup() %>%
+  select(Z, perc, LF_FOREST, sev_class, prepost) %>%
+  group_by(Z, LF_FOREST, sev_class, prepost)
 
 ## old janky stuff ########
 ########## get data together for ht layers ##########
