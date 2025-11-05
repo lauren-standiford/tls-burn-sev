@@ -38,6 +38,7 @@ p = ggplot() +
   facet_wrap(~ sev_class)
 
 ggsave("/Volumes/tls/figures/violin_plot.png", plot = p)
+
 ## old janky stuff ########
 ########## get data together for ht layers ##########
 
