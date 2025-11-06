@@ -12,7 +12,6 @@ df = tibble(
 
 df2 = everything %>%
   filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest",
-         !is.na(LF_FOREST),
          Z >= 0) %>%
   group_by(Z, LF_FOREST, sev_class, prepost) %>%
   summarise(
@@ -42,31 +41,40 @@ ggsave("/Volumes/tls/figures/violin_plot.png", plot = p)
 
 df_ordered_by_y <- df10 %>%
   filter(!is.na(sev_class)) %>%
-  arrange(Z)
+  arrange(Z) %>%
+  mutate(sev_class = fct_relevel(sev_class,
+    'Low',
+    'Medium',
+    'High'
+  )) %>%
+  mutate(prepost = fct_relevel(prepost, 'Pre', 'Post'))
 
 p = ggplot(df_ordered_by_y,
        mapping = aes(perc, Z, color = LF_FOREST, linetype = prepost)) +
   # geom_point() +
   geom_path() +
   facet_grid(~ sev_class)
+p
 
 ggsave("/Volumes/tls/figures/first_VVP_plot.png", plot = p)
 
 ########## plot rbr vs biomass change ############
 
-df2 = everything %>%
+rbr_bio2 = everything %>%
   filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest",
-         !is.na(LF_FOREST),
          !is.na(RBR_NN),
          Z >= 0) %>%
-  group_by(LF_FOREST, prepost) %>%
+  group_by(LF_FOREST, RBR_NN, plot, prepost) %>%
   summarise(
     total_filled = sum(n_filled),
     total_overall = sum(n_voxel),
     perc = total_filled/total_overall) %>%
-  # ungroup() %>%
-  select(Z, perc, LF_FOREST, sev_class, prepost) %>%
-  group_by(Z, LF_FOREST, sev_class, prepost)
+  reframe(change_prepost = (perc[prepost == "Pre"]) - (perc[prepost == "Post"]))
+
+
+ggplot(rbr_bio2, mapping = aes(change_prepost, RBR_NN, color = LF_FOREST)) +
+  geom_point()
+
 
 ## old janky stuff ########
 ########## get data together for ht layers ##########
