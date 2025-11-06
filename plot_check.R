@@ -69,7 +69,9 @@ i = i + 1
 
 write_csv(df, "plot_check.csv")
 
-############### check ranges/update df value ###################
+############################################################
+############# check ranges/update df value #################
+############################################################
 
 c15_range_x <- range(las@data$X)
 c1_range_y <- range(las@data$Y)
@@ -77,7 +79,9 @@ range_z <- range(las@data$Z)
 
 df[104, "quality"] <- 1
 
-############### update CRS ###################
+############################################################
+###################### update CRS ##########################
+############################################################
 
 i = 1
 
@@ -117,7 +121,9 @@ for (fifile_ifor (file_i in c5_files) {
 las = readLAS(file_i, filter = '-keep_random_fraction 0.000000000000001')
 st_crs(las)
 
+############################################################
 ############### plot pre/post together ###################
+############################################################
 
 library(rgl)
 
@@ -139,3 +145,34 @@ st_crs(las) == st_crs(las2)
 
 st_crs(las)
 st_crs(las2)
+
+############################################################
+################### missing forest type ####################
+############################################################
+
+everything = read_csv("/Volumes/tls/everything.csv")
+
+everything = everything %>%
+  # filter(is.na(LF_FOREST)) %>%
+  mutate(LF_FOREST = ifelse(is.na(LF_FOREST) & plot %in% c(1, 4, 14), "Hardwood Forest", LF_FOREST),
+         LF_FOREST = ifelse(is.na(LF_FOREST) & plot == 17, "Conifer Forest", LF_FOREST))
+
+field_data = readxl::read_xlsx("/Volumes/tls/3DForest_C6SaddleMountain_FieldData.xlsx", sheet = "Tree Data")
+
+field_data = field_data %>%
+  filter(Plot %in% c('p1', 'p4', 'p14', 'p17')) %>%
+  select(Plot, DBH, Species)
+
+############################################################
+##################### missing RBR_NN #######################
+############################################################
+
+everything = read_csv("/Volumes/tls/everything.csv")
+
+noRBR = everything %>%
+  filter(is.na(RBR_NN)) %>%
+  select(plot, campaign, RBR_NN)
+
+RBR_values = read_csv("/Volumes/tls/l83df_burn_severity_veg_type.csv")
+
+
