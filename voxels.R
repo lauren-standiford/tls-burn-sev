@@ -1,5 +1,6 @@
 library(lidR)
 library(tidyverse)
+library(glue)
 
 tls <- "E:/"
 tls <- "/Volumes/tls"
@@ -13,6 +14,10 @@ all_htnorm <- list.files(
 
 c6_files <- str_subset(all_htnorm, "\\bc6\\b")
 c10_files <- str_subset(all_htnorm, "\\bc10\\b")
+
+##############################################
+############# visualize voxels ###############
+##############################################
 
 las <- readLAS("E:/c6/c6_tls_p1_200811_11dot3m_htnorm.las")
 voxels <- voxelize_points(las, res = 0.1)
@@ -49,17 +54,25 @@ c6c10_files <- str_subset(all_htnorm, "\\bc6\\b|\\bc10\\b")
 i = 1
 file_i = c6c10_files[i]
 x = list()
+res_values = c(0.01, 0.05, 0.1, 0.25, 0.5)
 
 for (file_i in c6c10_files) {
+  for (res in res_values) {
   
   message('Processing ', file_i)
   message(i, ' of ', length(c6c10_files))
+  message('Voxel size = ', res)
   
   tictoc::tic()
   las <- readLAS(file_i)
   # voxels <- voxelize_points(las, res = 0.1)
-  vox_met <- voxel_metrics(las, ~list(N = length(Z)), res = 1, all_voxels = TRUE)
-  vox_file_name <- str_replace(file_i, "\\.las$", ".csv")
+  vox_met <- voxel_metrics(las, ~list(N = length(Z)), res = res, all_voxels = TRUE)
+  # vox_file_name <- str_replace(file_i, "\\.las$", ".csv")
+  
+  c <- str_extract(basename(file_i), "c\\d{1,4}")
+  p <- str_extract(basename(file_i), "p\\d{1,4}")
+                   
+  vox_file_name <- glue("c{c}_p{p}_{res}vox.csv")
   write_csv(vox_met, vox_file_name)
   
   filled <- vox_met %>%
@@ -69,18 +82,27 @@ for (file_i in c6c10_files) {
       n_filled = sum(!is.na(N)),
       percentage = n_filled/n_voxel
     ) %>%
-    add_column(plot = str_extract(basename(file_i), "p\\d{1,4}"),
-               campaign = str_extract(basename(file_i), "c\\d{1,4}")
-               )
+    add_column(plot = p,
+               campaign = c,
+               res = res)
   
-  x[[file_i]] = filled
+  x[[paste0(file_i, "_", res)]] <- filled
   
   
   tictoc::toc()
   
+  }
   i = i + 1
-  
 }
+
+
+for (file_i in c("test1", "test2")) {
+  for (res in c(0.05, 0.1)) {
+    x[[paste0(file_i, "_", res)]] <- data.frame(Z = 1:3, N = 1:3)
+  }
+}
+
+
 
 things = bind_rows(x)
 write_csv(things, "E:/c6/things.csv")
