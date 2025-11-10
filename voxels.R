@@ -97,23 +97,19 @@ for (file_i in c6c10_files) {
   i = i + 1
 }
 
+things = bind_rows(x)
+write_csv(things, "E:/c6/things.csv")
+voxel_data = read_csv("E:/things.csv")
+voxel_data = read_csv("/Volumes/tls/things.csv")
 
 all_csv_files <- list.files("E:/voxel_results/", full.names = TRUE)
-
 one_res <- str_subset(all_csv_files, "\\.5vox_summary\\.csv$")
-
 combined <- all_csv_files %>%
   lapply(read_csv) %>%
   bind_rows()
-
 write_csv(combined, "E:/voxel_results/c6c10_vox_data_all_res.csv")
-  
 
-things = bind_rows(x)
-write_csv(things, "E:/c6/things.csv")
 
-voxel_data = read_csv("E:/things.csv")
-voxel_data = read_csv("/Volumes/tls/things.csv")
 
 ##############################################
 ############ add fire sev data ###############

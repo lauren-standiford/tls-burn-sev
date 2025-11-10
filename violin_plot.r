@@ -72,9 +72,13 @@ rbr_bio2 = everything %>%
   reframe(change_prepost = (perc[prepost == "Pre"]) - (perc[prepost == "Post"]))
 
 
-ggplot(rbr_bio2, mapping = aes(change_prepost, RBR_NN, color = LF_FOREST)) +
+p = ggplot(rbr_bio2, mapping = aes(change_prepost, RBR_NN, color = LF_FOREST)) +
   geom_point()
+  # geom_smooth(method = "lm")
 
+p
+
+ggsave("/Volumes/tls/figures/c6c10_res1_rbrbio_no regline.png", plot = p)
 
 ## old janky stuff ########
 ########## get data together for ht layers ##########
