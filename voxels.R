@@ -54,7 +54,7 @@ c6c10_files <- str_subset(all_htnorm, "\\bc6\\b|\\bc10\\b")
 i = 1
 file_i = c6c10_files[i]
 x = list()
-res_values = c(0.01, 0.05, 0.1, 0.25, 0.5)
+res_values = c(0.05, 0.5)
 
 for (file_i in c6c10_files) {
   for (res in res_values) {
@@ -72,8 +72,8 @@ for (file_i in c6c10_files) {
   c <- str_extract(basename(file_i), "c\\d{1,4}")
   p <- str_extract(basename(file_i), "p\\d{1,4}")
                    
-  vox_file_name <- glue("c{c}_p{p}_{res}vox.csv")
-  write_csv(vox_met, vox_file_name)
+  # vox_file_name <- glue("{c}_{p}_{res}vox_metrics.csv")
+  # write_csv(vox_met, glue("{c}_{p}_{res}vox_metrics.csv"))
   
   filled <- vox_met %>%
     group_by(Z) %>%
@@ -86,23 +86,28 @@ for (file_i in c6c10_files) {
                campaign = c,
                res = res)
   
-  x[[paste0(file_i, "_", res)]] <- filled
+  # x[[paste0(file_i, "_", res)]] <- filled
   
+  write_csv(filled, glue("E:/voxel_results/{c}_{p}_{res}vox_summary.csv"))
   
   tictoc::toc()
-  
+  rm(filled, vox_met, las)
+  gc()
   }
   i = i + 1
 }
 
 
-for (file_i in c("test1", "test2")) {
-  for (res in c(0.05, 0.1)) {
-    x[[paste0(file_i, "_", res)]] <- data.frame(Z = 1:3, N = 1:3)
-  }
-}
+all_csv_files <- list.files("E:/voxel_results/", full.names = TRUE)
 
+one_res <- str_subset(all_csv_files, "\\.5vox_summary\\.csv$")
 
+combined <- all_csv_files %>%
+  lapply(read_csv) %>%
+  bind_rows()
+
+write_csv(combined, "E:/voxel_results/c6c10_vox_data_all_res.csv")
+  
 
 things = bind_rows(x)
 write_csv(things, "E:/c6/things.csv")
