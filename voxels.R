@@ -19,8 +19,8 @@ c10_files <- str_subset(all_htnorm, "\\bc10\\b")
 ############# visualize voxels ###############
 ##############################################
 
-las <- readLAS("E:/c6/c6_tls_p1_200811_11dot3m_htnorm.las")
-voxels <- voxelize_points(las, res = 0.1)
+las <- readLAS("/Volumes/tls/c1/c1_tls_p1301_201019_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.0001')
+las <- readLASheader("/Volumes/tls/c1/c1_tls_p1301_201019_11dot3m_htnorm.las")
 plot(voxels)
 
 vox_met <- voxel_metrics(las, ~list(N = length(Z)), res = 0.5)
@@ -180,13 +180,17 @@ ggsave("E:/first_plot.png", plot = p)
 ##############################################
 
 veg_type <- read_csv("E:/plt_veg_type.csv")
+veg_type <- read_csv("/Volumes/tls/plt_veg_type.csv")
 
 added_veg <- left_join(
-  plot_info %>% mutate(plot = gsub("^p", "", plot)),
+  added_sev %>% mutate(plot = gsub("^p", "", plot)),
   veg_type %>% mutate(plot = as.character(plot)),
   by = "plot",
   relationship = "many-to-one"
-)
+) %>%
+  select(Z, n_voxel, n_filled, percentage, plot, campaign, res, RBR_NN, RBR_3x3avg, LF_FOREST)
+
+
 write_csv(added_veg, "E:/c6/prepost_veg_251028.csv")
 all_stuff = read_csv("E:/prepost_veg_251028.csv")
 all_stuff = read_csv("/Volumes/tls/prepost_veg_251028.csv")
@@ -226,7 +230,7 @@ ggsave("/Volumes/tls/figures/forest_type_split_plot.png", plot = split_FR_plots)
 
 everything = read_csv("/Volumes/tls/voxel_results/c6c10_vox_data_all_res.csv")
 
-everything = everything %>%
+added_veg = added_veg %>%
   # filter(is.na(LF_FOREST)) %>%
   mutate(LF_FOREST = ifelse(is.na(LF_FOREST) & plot %in% c(1, 4, 14), "Hardwood Forest", LF_FOREST),
          LF_FOREST = ifelse(is.na(LF_FOREST) & plot == 17, "Conifer Forest", LF_FOREST))
@@ -243,7 +247,7 @@ field_data = field_data %>%
 
 everything = read_csv("/Volumes/tls/everything.csv")
 
-noRBR = everything %>%
+noRBR = added_veg %>%
   filter(is.na(RBR_NN)) %>%
   select(plot, campaign) %>%
   distinct()
@@ -257,9 +261,9 @@ RBR_values = RBR_values %>%
   subset(Plot %in% c("20", "23")) 
 
 RBR_values$Plot <- as.character(RBR_values$Plot)
-everything$plot <- as.character(everything$plot)
+added_veg$plot <- as.character(added_veg$plot)
 
-new_everything = everything %>%
+new_added_veg = added_veg %>%
   left_join(RBR_values, by = c("plot" = "Plot"), suffix = c("", "_new")) %>%
   mutate(
     RBR_NN = coalesce(RBR_NN, RBR_NN_new),
@@ -267,5 +271,5 @@ new_everything = everything %>%
   ) %>%
   select(-ends_with("_new"))
 
-write_csv(new_everything, "/Volumes/tls/all_data_res1m_voxels.csv")
-voxdata_1m = read_csv("/Volumes/tls/all_data_res1m_voxels.csv")
+write_csv(all_vox_data, "/Volumes/tls/all_data_res.05to.5_voxels.csv")
+all_vox_data = read_csv("/Volumes/tls/all_data_res.05to.5_voxels.csv")

@@ -1,18 +1,65 @@
 library(lidR)
 library(tidyverse)
 
-###### violin and VVP plots #########
+###### violin plots #########
 
-df = tibble(
-  perc = runif(10),
-  z = c(1, 1, 1, 1, 1, 2, 2, 2, 2, 2),
-  type = c('con', 'con', 'con', 'con', 'con', 
-           'oak', 'oak', 'oak', 'oak', 'oak')
-)
+# df = tibble(
+#   perc = runif(10),
+#   z = c(1, 1, 1, 1, 1, 2, 2, 2, 2, 2),
+#   type = c('con', 'con', 'con', 'con', 'con', 
+#            'oak', 'oak', 'oak', 'oak', 'oak')
+# )
 
-df2 = everything %>%
+# all_vox_data = read_csv("/Volumes/tls/all_data_res.05to.5_voxels.csv")
+# 
+# one_res = all_vox_data %>%
+#   filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest",
+#          Z >= 0,
+#          res == 0.05) %>%
+#   group_by(Z, LF_FOREST, sev_class, prepost) %>%
+#   summarise(
+#     total_filled = sum(n_filled),
+#     total_overall = sum(n_voxel),
+#     perc = total_filled/total_overall) %>%
+#   # ungroup() %>%
+#   select(Z, perc, LF_FOREST, sev_class, prepost) %>%
+#   group_by(Z, LF_FOREST, sev_class, prepost)
+# 
+# dummy_data = one_res %>%
+#   rowwise() %>%
+#   mutate(
+#     r = map(Z, ~ rep.int(.x, floor(perc * 100))
+#     )) %>%
+#   unnest(r) %>%
+#   ungroup()
+
+# write_csv(everything, "/Volumes/tls/everything.csv")
+
+# p = ggplot() +
+#   geom_violin(df10,
+#               mapping = aes(LF_FOREST, Z, color = prepost)) +
+#   facet_wrap(~ sev_class)
+# 
+# ggsave("/Volumes/tls/figures/violin_plot.png", plot = p)
+
+# df_ordered_by_y <- dummy_data %>%
+#   filter(!is.na(sev_class)) %>%
+#   arrange(Z) %>%
+#   mutate(sev_class = fct_relevel(sev_class,
+#     'Low',
+#     'Moderate',
+#     'High'
+#   )) %>%
+#   mutate(prepost = fct_relevel(prepost, 'Pre', 'Post'))
+
+################
+
+all_vox_data = read_csv("/Volumes/tls/all_data_res.05to.5_voxels.csv")
+
+all_together = all_vox_data %>%
   filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest",
-         Z >= 0) %>%
+         Z >= 1,
+         res == 0.25) %>%
   group_by(Z, LF_FOREST, sev_class, prepost) %>%
   summarise(
     total_filled = sum(n_filled),
@@ -20,47 +67,35 @@ df2 = everything %>%
     perc = total_filled/total_overall) %>%
   # ungroup() %>%
   select(Z, perc, LF_FOREST, sev_class, prepost) %>%
-  group_by(Z, LF_FOREST, sev_class, prepost)
-
-df10 = df2 %>%
+  group_by(Z, LF_FOREST, sev_class, prepost) %>%
   rowwise() %>%
   mutate(
     r = map(Z, ~ rep.int(.x, floor(perc * 100))
     )) %>%
   unnest(r) %>%
-  ungroup()
-
-write_csv(everything, "/Volumes/tls/everything.csv")
-
-p = ggplot() +
-  geom_violin(df10,
-              mapping = aes(LF_FOREST, Z, color = prepost)) +
-  facet_wrap(~ sev_class)
-
-ggsave("/Volumes/tls/figures/violin_plot.png", plot = p)
-
-df_ordered_by_y <- df10 %>%
+  ungroup() %>%
   filter(!is.na(sev_class)) %>%
   arrange(Z) %>%
   mutate(sev_class = fct_relevel(sev_class,
-    'Low',
-    'Medium',
-    'High'
+                                 'Low',
+                                 'Moderate',
+                                 'High'
   )) %>%
   mutate(prepost = fct_relevel(prepost, 'Pre', 'Post'))
 
-p = ggplot(df_ordered_by_y,
+p = ggplot(all_together,
        mapping = aes(perc, Z, color = LF_FOREST, linetype = prepost)) +
   # geom_point() +
   geom_path() +
-  facet_grid(~ sev_class)
+  facet_grid(~ sev_class) +
+  labs(x = "Change in voxels", y = "Height (m)", title = "VVP Plot for 0.25 res voxels over 1m")
 p
 
-ggsave("/Volumes/tls/figures/first_VVP_plot.png", plot = p)
+ggsave("/Volumes/tls/figures/res0.05over1m_VVP_plot.png", plot = p)
 
 ########## plot rbr vs biomass change ############
 
-rbr_bio2 = everything %>%
+rbr_bio2 = all_vox_data %>%
   filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest",
          !is.na(RBR_NN),
          Z >= 0) %>%
@@ -73,8 +108,8 @@ rbr_bio2 = everything %>%
 
 
 p = ggplot(rbr_bio2, mapping = aes(change_prepost, RBR_NN, color = LF_FOREST)) +
-  geom_point()
-  # geom_smooth(method = "lm")
+  geom_point() +
+  geom_smooth(method = "lm")
 
 p
 
@@ -125,16 +160,16 @@ added_veg <- left_join(
 )
 
 # add sev classes
-everything <- added_veg %>%
+all_vox_data <- all_vox_data %>%
   ungroup() %>%
   mutate(sev_class = case_when(
     RBR_NN < 130 ~ 'Low',
-    RBR_NN >= 130 & RBR_NN < 298 ~ 'Medium',
+    RBR_NN >= 130 & RBR_NN < 298 ~ 'Moderate',
     RBR_NN >= 298 ~ 'High'
   ) |>
     fct_relevel(
       'Low',
-      'Medium',
+      'Moderate',
       'High'
     ))
 
