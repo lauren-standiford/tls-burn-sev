@@ -109,7 +109,23 @@ combined <- all_csv_files %>%
   bind_rows()
 write_csv(combined, "E:/voxel_results/c6c10_vox_data_all_res.csv")
 
+one_res <- read_csv("/Volumes/tls/voxel_results/c6c10_vox_data_all_res.csv")
 
+one_res <- one_res %>%
+  filter(res == 0.05,
+         Z >= 0)
+
+new_df <- one_res %>%
+  left_join(
+    one_res,
+    just_add,
+    by = c("plot", "campaign"),
+    relationship = "many-to-many"
+  )
+  
+just_add <- everything %>%
+  select(plot, campaign, RBR_NN, RBR_3x3avg, prepost, LF_FOREST, sev_class)
+  # distinct()
 
 ##############################################
 ############ add fire sev data ###############
@@ -117,6 +133,8 @@ write_csv(combined, "E:/voxel_results/c6c10_vox_data_all_res.csv")
 
 mtbs <- read_csv("E:/burn_severity_3dforests/kincade_glass_fire_tls_plot_centers_sentinel2a_20m_rbr.csv")
 mtbs <- read_csv("/Volumes/tls/burn_severity_3dforests/kincade_glass_fire_tls_plot_centers_sentinel2a_20m_rbr.csv")
+
+voxel_data = read_csv("/Volumes/tls/voxel_results/c6c10_vox_data_all_res.csv")
 
 added_sev <- left_join(
   voxel_data,
@@ -201,3 +219,53 @@ split_FR_plots <- ggplot(added_veg %>%
 
 print(split_FR_plots)
 ggsave("/Volumes/tls/figures/forest_type_split_plot.png", plot = split_FR_plots)
+
+############################################################
+################### missing forest type ####################
+############################################################
+
+everything = read_csv("/Volumes/tls/voxel_results/c6c10_vox_data_all_res.csv")
+
+everything = everything %>%
+  # filter(is.na(LF_FOREST)) %>%
+  mutate(LF_FOREST = ifelse(is.na(LF_FOREST) & plot %in% c(1, 4, 14), "Hardwood Forest", LF_FOREST),
+         LF_FOREST = ifelse(is.na(LF_FOREST) & plot == 17, "Conifer Forest", LF_FOREST))
+
+field_data = readxl::read_xlsx("/Volumes/tls/3DForest_C6SaddleMountain_FieldData.xlsx", sheet = "Tree Data")
+
+field_data = field_data %>%
+  filter(Plot %in% c('p1', 'p4', 'p14', 'p17')) %>%
+  select(Plot, DBH, Species)
+
+############################################################
+##################### missing RBR ##########################
+############################################################
+
+everything = read_csv("/Volumes/tls/everything.csv")
+
+noRBR = everything %>%
+  filter(is.na(RBR_NN)) %>%
+  select(plot, campaign) %>%
+  distinct()
+
+RBR_values = read_csv("/Volumes/tls/l83df_burn_severity_veg_type.csv")
+RBR_values = RBR_values %>%
+  select(Plot, RBR, RBR3x3) %>%
+  mutate(Plot = gsub("^p", "", Plot)) %>%
+  rename(RBR_NN = RBR) %>%
+  rename(RBR_3x3avg = RBR3x3) %>%
+  subset(Plot %in% c("20", "23")) 
+
+RBR_values$Plot <- as.character(RBR_values$Plot)
+everything$plot <- as.character(everything$plot)
+
+new_everything = everything %>%
+  left_join(RBR_values, by = c("plot" = "Plot"), suffix = c("", "_new")) %>%
+  mutate(
+    RBR_NN = coalesce(RBR_NN, RBR_NN_new),
+    RBR_3x3avg = coalesce(RBR_3x3avg, RBR_3x3avg_new)
+  ) %>%
+  select(-ends_with("_new"))
+
+write_csv(new_everything, "/Volumes/tls/all_data_res1m_voxels.csv")
+voxdata_1m = read_csv("/Volumes/tls/all_data_res1m_voxels.csv")
