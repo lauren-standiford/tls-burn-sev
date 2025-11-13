@@ -145,3 +145,39 @@ st_crs(las) == st_crs(las2)
 
 st_crs(las)
 st_crs(las2)
+
+############################################################
+###################### clip radius #########################
+############################################################
+
+tls <- "E:/"
+all_htnorm <- list.files(
+  tls,
+  full.names = T,
+  recursive = T,
+  pattern = 'htnorm\\.las$'
+)
+c2_files <- str_subset(all_htnorm, "\\bc2\\b")
+
+i = 1
+file_i = c2_files[i]
+
+for (file_i in c2_files) {
+  message('Processing ', file_i)
+  message(i, ' of ', length(c2_files))
+  las = readLASheader(file_i)
+  x = st_bbox(las)
+  r = ((x$xmax - x$xmin)/2)
+  
+  df = df %>%
+    add_row(
+      file_name = file_i,
+      campaign = str_extract(file_i, "c\\d+"),
+      plot = str_match(file_i, "p(\\d+)")[,2],
+      radius = r,
+      x_center = (x$xmin + r),
+      y_center = (x$ymin + r)
+    )
+  
+  i = i + 1
+}
