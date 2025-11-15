@@ -64,7 +64,7 @@ for (file in c6_files) {
 
  ############ ht normalization ############
 
-tls <- "E:/"
+tls <- "D:/"
 
 all_files <- list.files(
   tls,
@@ -74,7 +74,7 @@ all_files <- list.files(
 )
 
 # files <- str_subset(all_files, "\\bc10\\b*m\\.las|\\bc6_dtms\\b")
-files <- str_subset(all_files, "(c6_dtms|c10.*3m\\.las$)")
+files <- str_subset(all_files, "(c1_dtms|c2.*3m\\.las$)")
 
 file_info <- data.frame(
   file = files,

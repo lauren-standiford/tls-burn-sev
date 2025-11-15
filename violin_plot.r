@@ -54,7 +54,8 @@ library(tidyverse)
 
 ################
 
-all_vox_data = read_csv("/Volumes/tls/all_data_res.05to.5_voxels.csv")
+#all_vox_data = read_csv("/Volumes/tls/all_data_res.05to.5_voxels.csv")
+all_vox_data = read_csv("D:/all_data_res.05to.5_voxels.csv")
 
 all_together = all_vox_data %>%
   filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest",
@@ -88,17 +89,23 @@ p = ggplot(all_together,
   # geom_point() +
   geom_path() +
   facet_grid(~ sev_class) +
-  labs(x = "Change in voxels", y = "Height (m)", title = "VVP Plot for 0.25 res voxels over 1m")
+  labs(x = "Percentage of filled voxels", 
+       y = "Height (m)", 
+       #title = "VVP Plot for 0.25 res voxels over 1m",
+       color = "Forest Type",
+       linetype = "Wildfire Status")
 p
 
-ggsave("/Volumes/tls/figures/res0.05over1m_VVP_plot.png", plot = p)
+# ggsave("/Volumes/tls/figures/res0.05over1m_VVP_plot.png", plot = p)
+ggsave("D:/figures/res0.25over1m_VVP_plot_111425.png", plot = p)
 
 ########## plot rbr vs biomass change ############
 
 rbr_bio2 = all_vox_data %>%
   filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest",
          !is.na(RBR_NN),
-         Z >= 0) %>%
+         Z >= 0,
+         res == 0.25) %>%
   group_by(LF_FOREST, RBR_NN, plot, prepost) %>%
   summarise(
     total_filled = sum(n_filled),
@@ -109,11 +116,15 @@ rbr_bio2 = all_vox_data %>%
 
 p = ggplot(rbr_bio2, mapping = aes(change_prepost, RBR_NN, color = LF_FOREST)) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  labs(x = "Percentage of biomass loss",
+       y = "RBR",
+       color = "Forest Type")
 
 p
 
 ggsave("/Volumes/tls/figures/c6c10_res1_rbrbio_no regline.png", plot = p)
+ggsave("D:/figures/c6c10_res0.25_rbrbio_111425.png", plot = p)
 
 ## old janky stuff ########
 ########## get data together for ht layers ##########

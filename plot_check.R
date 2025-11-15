@@ -131,8 +131,23 @@ i = 84
 file_i = las_files[i]
 file_i
 
-las1 = readLAS(file_i, filter = '-keep_random_fraction 0.0001')
-las2 = readLAS(file_i, filter = '-keep_random_fraction 0.0001')
+c2_files <- list.files(
+  tls,
+  full.names = T,
+  recursive = T,
+  pattern = 'c2.*3m\\.las$'
+)
+c1_files <- list.files(
+  tls,
+  full.names = T,
+  recursive = T,
+  pattern = 'c1.*3m\\.las$'
+)
+
+
+
+las1 = readLAS("D:/c2/c2_tls_p1335_200327_reg2c1_11dot3m.las", filter = '-keep_random_fraction 0.0001')
+las2 = readLAS("D:/c1/c1_tls_p1335_201019_11dot3m.las", filter = '-keep_random_fraction 0.0001')
 
 x = lidR::plot(las1, pal = "red")
 
@@ -150,14 +165,22 @@ st_crs(las2)
 ###################### clip radius #########################
 ############################################################
 
-tls <- "E:/"
-all_htnorm <- list.files(
+df = tibble(
+  file_name = c(1),
+  campaign = c(1),
+  plot = c(1),
+  radius = c(1),
+  x_center = c(1),
+  y_center = c(1),
+)
+
+tls <- "D:/"
+c2_files <- list.files(
   tls,
   full.names = T,
   recursive = T,
-  pattern = 'htnorm\\.las$'
+  pattern = 'reg2c1\\.las$'
 )
-c2_files <- str_subset(all_htnorm, "\\bc2\\b")
 
 i = 1
 file_i = c2_files[i]
@@ -181,3 +204,33 @@ for (file_i in c2_files) {
   
   i = i + 1
 }
+
+df$x_center <- as.numeric(df$x_center)
+df$y_center <- as.numeric(df$y_center)
+df$radius <- as.numeric(df$radius)
+
+# write_csv(df, "D:/c2/c2_centers.csv")
+df = read_csv("D:/c2/c2_centers.csv")
+
+i = 1
+file_i = c2_files[i]
+
+for (file_i in c2_files) {
+  message('Processing ', file_i)
+  message(i, ' of ', length(c2_files))
+  tictoc::tic()
+  
+  las = readLAS(df$file_name[i])
+  x_center = df$x_center[i]
+  y_center = df$y_center[i]
+  new_radius = 11.3
+  
+  las = clip_circle(las = las, xcenter = x_center, ycenter = y_center, radius = new_radius)
+  
+  new_file_name <- str_replace(file_i, "\\.las$", "_11dot3m\\.las")
+  writeLAS(las, new_file_name)
+  tictoc::toc()
+  
+  i = i + 1
+}
+
