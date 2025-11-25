@@ -35,10 +35,11 @@ las_files <- list.files(
 
 # on windows
 las_files <- list.files(
-  'E:/',
+  'D:/',
   full.names = T,
   recursive = T,
-  pattern = '\\.(tif|las)$'
+  #pattern = '\\.(tif|las)$'
+  pattern = 'las$'
 )
 
 i = 8
@@ -97,22 +98,28 @@ i = i + 1
 
 ###
 
-c5_files <- str_subset(las_files, "\\bc5\\b")
+c2_files <- str_subset(las_files, "\\bc2_clipped\\b")
 
-x = readLAS(las_files[i = 27], filter = '-keep_random_fraction 0.00000000001')
+#x = readLAS(las_files[i = 27], filter = '-keep_random_fraction 0.00000000001')
+x = readLAS("D:/c1/c1_tls_p1301_201019_11dot3m.las", filter = '-keep_random_fraction 0.00000000001')
 st_crs(x)
 
+las_check(x)
 
-for (fifile_ifor (file_i in c5_files) {
-  file_i = c5_files[5]
-  file_i
+
+for ((file_i in c2_files) {
+  file_i = c2_files[i]
+  #file_i
   message('Processing ', file_i)
-  message(i, ' of ', length(c5_files))
+  message(i, ' of ', length(c2_files))
   tictoc::tic()
   las = readLAS(file_i)
   st_crs(las) = st_crs(x)
+  projection(las) = projection(x)
+  projection(las) <- "EPSG:26910"
   #st_crs(las)
-  writeLAS(las, file_i)
+  file_name <- str_replace(file_i, "\\.las$", "_maybe\\.las")
+  writeLAS(las, file_name)
   tictoc::toc()
   
   i = i + 1
@@ -144,21 +151,30 @@ c1_files <- list.files(
   pattern = 'c1.*3m\\.las$'
 )
 
+everything = read_csv("D:/plt_veg_type.csv") 
+everything = everything %>%
+  group_by(plot)
 
-
-las1 = readLAS("D:/c2/c2_tls_p1335_200327_reg2c1_11dot3m.las", filter = '-keep_random_fraction 0.0001')
-las2 = readLAS("D:/c1/c1_tls_p1335_201019_11dot3m.las", filter = '-keep_random_fraction 0.0001')
+las1 = readLAS("D:/c1/c1_tls_p1301_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
+las3 = readLAS("D:/c2_clipped/c2_1301_fixedmaybe.las", filter = '-keep_random_fraction 0.001')
 
 x = lidR::plot(las1, pal = "red")
 
-lidR::plot(las2, pal = "blue", add = x)
+#lidR::plot(las2)
+
+lidR::plot(las_check, pal = "blue", add = x)
+
+crs(las1)
+st_crs(las2) <- st_crs(las1)
+
+# 1301 reg worked, changes when clip
 
 range_z <- range(las@data$Z)
 range_z2 <- range(las2@data$Z)
 
-st_crs(las) == st_crs(las2)
+st_crs(las2) == st_crs(las1)
 
-st_crs(las)
+st_crs(las1)
 st_crs(las2)
 
 ############################################################
@@ -234,3 +250,15 @@ for (file_i in c2_files) {
   i = i + 1
 }
 
+las2@header[["X offset"]]
+las1@header[["X offset"]]
+
+las2@header[["X offset"]] <- las1@header[["X offset"]]
+las2@header[["Y offset"]] <- las1@header[["Y offset"]]
+las2@header[["Z offset"]] <- las1@header[["Z offset"]]
+
+las2@header[["X scale factor"]] <- las1@header[["X scale factor"]]
+las2@header[["Y scale factor"]] <- las1@header[["Y scale factor"]]
+las2@header[["Z scale factor"]] <- las1@header[["Z scale factor"]]
+
+writeLAS(las2, "D:/c2_clipped/c2_1301_fixedmaybe.las")
