@@ -155,17 +155,17 @@ everything = read_csv("D:/plt_veg_type.csv")
 everything = everything %>%
   group_by(plot)
 
-las1 = readLAS("D:/c1/c1_tls_p1301_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
-las3 = readLAS("D:/c2_clipped/c2_1301_fixedmaybe.las", filter = '-keep_random_fraction 0.001')
+las1 = readLAS("D:/c1/c1_tls_p1335_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
+las2 = readLAS("D:/c2/c2_tls_p1335_200327_reg2c1.las", filter = '-keep_random_fraction 0.001')
 
 x = lidR::plot(las1, pal = "red")
 
 #lidR::plot(las2)
 
-lidR::plot(las_check, pal = "blue", add = x)
+lidR::plot(las2, pal = "blue", add = x)
 
 crs(las1)
-st_crs(las2) <- st_crs(las1)
+st_crs(las2) <- st_crs("EPSG:26910")
 
 # 1301 reg worked, changes when clip
 
