@@ -15,9 +15,9 @@ all_htnorm <- list.files(
 c6_files <- str_subset(all_htnorm, "\\bc6\\b")
 c10_files <- str_subset(all_htnorm, "\\bc10\\b")
 
-##############################################
-############# visualize voxels ###############
-##############################################
+#==============================================================
+#                      visualize voxels 
+#==============================================================
 
 las <- readLAS("/Volumes/tls/c1/c1_tls_p1301_201019_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.0001')
 las <- readLASheader("/Volumes/tls/c1/c1_tls_p1301_201019_11dot3m_htnorm.las")
@@ -39,9 +39,9 @@ vox_met2 <- voxel_metrics(las2, ~list(N2 = length(Z)), res = 0.5)
 vox_filtered2 <- vox_met2[vox_met2$N2 >= 500 & vox_met2$N2 <= 4500, ]
 plot(vox_filtered2, color = "N2", pal = heat.colors, size = 0.5, bg = "white", voxel = TRUE)
 
-##############################################
-####### generate voxels and metrics ##########
-##############################################
+#==============================================================
+#               generate voxels and metrics
+#==============================================================
 
 c6c10_files <- str_subset(all_htnorm, "\\bc6\\b|\\bc10\\b")
 
@@ -127,9 +127,9 @@ just_add <- everything %>%
   select(plot, campaign, RBR_NN, RBR_3x3avg, prepost, LF_FOREST, sev_class)
   # distinct()
 
-##############################################
-############ add fire sev data ###############
-##############################################
+#==============================================================
+#                        add fire sev data 
+#==============================================================
 
 mtbs <- read_csv("E:/burn_severity_3dforests/kincade_glass_fire_tls_plot_centers_sentinel2a_20m_rbr.csv")
 mtbs <- read_csv("/Volumes/tls/burn_severity_3dforests/kincade_glass_fire_tls_plot_centers_sentinel2a_20m_rbr.csv")
@@ -175,9 +175,9 @@ p <- ggplot(plot_info, aes(x = prepost, y = perc, color = RBR_NN)) +
 
 ggsave("E:/first_plot.png", plot = p)
 
-##############################################
-########## add forest type data ##############
-##############################################
+#==============================================================
+#                       add forest type data 
+#==============================================================
 
 veg_type <- read_csv("E:/plt_veg_type.csv")
 veg_type <- read_csv("/Volumes/tls/plt_veg_type.csv")
@@ -224,9 +224,9 @@ split_FR_plots <- ggplot(added_veg %>%
 print(split_FR_plots)
 ggsave("/Volumes/tls/figures/forest_type_split_plot.png", plot = split_FR_plots)
 
-############################################################
-################### missing forest type ####################
-############################################################
+#==============================================================
+#                      missing forest type 
+#==============================================================
 
 everything = read_csv("/Volumes/tls/voxel_results/c6c10_vox_data_all_res.csv")
 
@@ -241,9 +241,9 @@ field_data = field_data %>%
   filter(Plot %in% c('p1', 'p4', 'p14', 'p17')) %>%
   select(Plot, DBH, Species)
 
-############################################################
-##################### missing RBR ##########################
-############################################################
+#==============================================================
+#                           missing RBR 
+#==============================================================
 
 everything = read_csv("/Volumes/tls/everything.csv")
 

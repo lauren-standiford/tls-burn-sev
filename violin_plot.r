@@ -1,58 +1,62 @@
 library(lidR)
 library(tidyverse)
 
-###### violin plots #########
+#==============================================================
+#                         violin plots 
+#==============================================================
 
-# df = tibble(
-#   perc = runif(10),
-#   z = c(1, 1, 1, 1, 1, 2, 2, 2, 2, 2),
-#   type = c('con', 'con', 'con', 'con', 'con', 
-#            'oak', 'oak', 'oak', 'oak', 'oak')
-# )
+df = tibble(
+  perc = runif(10),
+  z = c(1, 1, 1, 1, 1, 2, 2, 2, 2, 2),
+  type = c('con', 'con', 'con', 'con', 'con',
+           'oak', 'oak', 'oak', 'oak', 'oak')
+)
 
-# all_vox_data = read_csv("/Volumes/tls/all_data_res.05to.5_voxels.csv")
-# 
-# one_res = all_vox_data %>%
-#   filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest",
-#          Z >= 0,
-#          res == 0.05) %>%
-#   group_by(Z, LF_FOREST, sev_class, prepost) %>%
-#   summarise(
-#     total_filled = sum(n_filled),
-#     total_overall = sum(n_voxel),
-#     perc = total_filled/total_overall) %>%
-#   # ungroup() %>%
-#   select(Z, perc, LF_FOREST, sev_class, prepost) %>%
-#   group_by(Z, LF_FOREST, sev_class, prepost)
-# 
-# dummy_data = one_res %>%
-#   rowwise() %>%
-#   mutate(
-#     r = map(Z, ~ rep.int(.x, floor(perc * 100))
-#     )) %>%
-#   unnest(r) %>%
-#   ungroup()
+all_vox_data = read_csv("/Volumes/tls/all_data_res.05to.5_voxels.csv")
 
-# write_csv(everything, "/Volumes/tls/everything.csv")
+one_res = all_vox_data %>%
+  filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest",
+         Z >= 0,
+         res == 0.05) %>%
+  group_by(Z, LF_FOREST, sev_class, prepost) %>%
+  summarise(
+    total_filled = sum(n_filled),
+    total_overall = sum(n_voxel),
+    perc = total_filled/total_overall) %>%
+  # ungroup() %>%
+  select(Z, perc, LF_FOREST, sev_class, prepost) %>%
+  group_by(Z, LF_FOREST, sev_class, prepost)
 
-# p = ggplot() +
-#   geom_violin(df10,
-#               mapping = aes(LF_FOREST, Z, color = prepost)) +
-#   facet_wrap(~ sev_class)
-# 
-# ggsave("/Volumes/tls/figures/violin_plot.png", plot = p)
+dummy_data = one_res %>%
+  rowwise() %>%
+  mutate(
+    r = map(Z, ~ rep.int(.x, floor(perc * 100))
+    )) %>%
+  unnest(r) %>%
+  ungroup()
 
-# df_ordered_by_y <- dummy_data %>%
-#   filter(!is.na(sev_class)) %>%
-#   arrange(Z) %>%
-#   mutate(sev_class = fct_relevel(sev_class,
-#     'Low',
-#     'Moderate',
-#     'High'
-#   )) %>%
-#   mutate(prepost = fct_relevel(prepost, 'Pre', 'Post'))
+write_csv(everything, "/Volumes/tls/everything.csv")
 
-################
+p = ggplot() +
+  geom_violin(df10,
+              mapping = aes(LF_FOREST, Z, color = prepost)) +
+  facet_wrap(~ sev_class)
+
+ggsave("/Volumes/tls/figures/violin_plot.png", plot = p)
+
+df_ordered_by_y <- dummy_data %>%
+  filter(!is.na(sev_class)) %>%
+  arrange(Z) %>%
+  mutate(sev_class = fct_relevel(sev_class,
+    'Low',
+    'Moderate',
+    'High'
+  )) %>%
+  mutate(prepost = fct_relevel(prepost, 'Pre', 'Post'))
+
+#==============================================================
+#                          dfs and VVP
+#==============================================================
 
 #all_vox_data = read_csv("/Volumes/tls/all_data_res.05to.5_voxels.csv")
 all_vox_data = read_csv("D:/all_data_res.05to.5_voxels.csv")
@@ -99,7 +103,9 @@ p
 # ggsave("/Volumes/tls/figures/res0.05over1m_VVP_plot.png", plot = p)
 ggsave("D:/figures/res0.25over1m_VVP_plot_111425.png", plot = p)
 
-########## plot rbr vs biomass change ############
+#==============================================================
+#                    plot rbr vs biomass change 
+#==============================================================
 
 rbr_bio2 = all_vox_data %>%
   filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest",
@@ -126,8 +132,10 @@ p
 ggsave("/Volumes/tls/figures/c6c10_res1_rbrbio_no regline.png", plot = p)
 ggsave("D:/figures/c6c10_res0.25_rbrbio_111425.png", plot = p)
 
-## old janky stuff ########
-########## get data together for ht layers ##########
+#==============================================================
+#                        old janky stuff
+#==============================================================
+#get data together for ht layers
 
 tls <- "E:/"
 tls <- "/Volumes/tls"
@@ -203,7 +211,7 @@ just_by_hts <- data_by_ht %>%
 write_csv(condense_hts, "/Volumes/tls/condensed_ht.csv")
 condense_hts = read_csv("/Volumes/tls/condensed_ht.csv")
 
-################# okay now to plot ############
+################# okay now to plot 
 
 ggplot(everything %>%
          filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest") %>%

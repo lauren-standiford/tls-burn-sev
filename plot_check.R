@@ -44,7 +44,9 @@ las_files <- list.files(
 
 i = 8
 
-################### view las files and add to QC df ###################
+#==============================================================
+#             view las files and add to QC df 
+#==============================================================
 
 file_i = las_files[i]
 file_i
@@ -66,13 +68,13 @@ df = df %>%
 
 i = i + 1
 
-############### write csv ###################
+
 
 write_csv(df, "plot_check.csv")
 
-############################################################
-############# check ranges/update df value #################
-############################################################
+#==============================================================
+#                 check ranges/update df value                   
+#==============================================================
 
 c15_range_x <- range(las@data$X)
 c1_range_y <- range(las@data$Y)
@@ -80,9 +82,9 @@ range_z <- range(las@data$Z)
 
 df[104, "quality"] <- 1
 
-############################################################
-###################### update CRS ##########################
-############################################################
+#==============================================================
+#                         update CRS
+#==============================================================
 
 i = 1
 
@@ -128,9 +130,9 @@ for ((file_i in c2_files) {
 las = readLAS(file_i, filter = '-keep_random_fraction 0.000000000000001')
 st_crs(las)
 
-############################################################
-############### plot pre/post together ###################
-############################################################
+#==============================================================
+#                     plot pre/post together 
+#==============================================================
 
 library(rgl)
 
@@ -155,19 +157,16 @@ everything = read_csv("D:/plt_veg_type.csv")
 everything = everything %>%
   group_by(plot)
 
-las1 = readLAS("D:/c1/c1_tls_p1335_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
-las2 = readLAS("D:/c2/c2_tls_p1335_200327_reg2c1.las", filter = '-keep_random_fraction 0.001')
+las1 = readLAS("D:/c1/c1_tls_p1312_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
+las2 = readLAS("D:/c2/c2_tls_p1312_200327_reg2c1.las", filter = '-keep_random_fraction 0.001')
 
-x = lidR::plot(las1, pal = "red")
+x = plot(las1, pal = "red")
+plot(las2, pal = "blue", add = x)
 
-#lidR::plot(las2)
+crs(las2)
+st_crs(las2) == st_crs("EPSG:26910")
 
-lidR::plot(las2, pal = "blue", add = x)
 
-crs(las1)
-st_crs(las2) <- st_crs("EPSG:26910")
-
-# 1301 reg worked, changes when clip
 
 range_z <- range(las@data$Z)
 range_z2 <- range(las2@data$Z)
@@ -177,9 +176,9 @@ st_crs(las2) == st_crs(las1)
 st_crs(las1)
 st_crs(las2)
 
-############################################################
-###################### clip radius #########################
-############################################################
+#==============================================================
+#                         clip radius 
+#==============================================================
 
 df = tibble(
   file_name = c(1),
