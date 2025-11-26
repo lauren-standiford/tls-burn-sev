@@ -68,8 +68,6 @@ df = df %>%
 
 i = i + 1
 
-
-
 write_csv(df, "plot_check.csv")
 
 #==============================================================
@@ -103,13 +101,13 @@ i = i + 1
 c2_files <- str_subset(las_files, "\\bc2_clipped\\b")
 
 #x = readLAS(las_files[i = 27], filter = '-keep_random_fraction 0.00000000001')
-x = readLAS("D:/c1/c1_tls_p1301_201019_11dot3m.las", filter = '-keep_random_fraction 0.00000000001')
+x = readLAS("D:/c2/c2_tls_p1349_200327.las")
 st_crs(x)
+st_crs(x) = st_crs("EPSG:26910")
+writeLAS(x, "D:/c2/c2_tls_p1349_200327_crs.las")
 
-las_check(x)
 
-
-for ((file_i in c2_files) {
+for (file_i in c2_files) {
   file_i = c2_files[i]
   #file_i
   message('Processing ', file_i)
@@ -157,8 +155,8 @@ everything = read_csv("D:/plt_veg_type.csv")
 everything = everything %>%
   group_by(plot)
 
-las1 = readLAS("D:/c1/c1_tls_p1312_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
-las2 = readLAS("D:/c2/c2_tls_p1312_200327_reg2c1.las", filter = '-keep_random_fraction 0.001')
+las1 = readLAS("D:/c1/c1_tls_p1304_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
+las2 = readLAS("D:/c2/c2_tls_p1304_200327_crs_reg2c1_origlas.las", filter = '-keep_random_fraction 0.001')
 
 x = plot(las1, pal = "red")
 plot(las2, pal = "blue", add = x)
