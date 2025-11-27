@@ -232,16 +232,17 @@ i = 1
 file_i = c2_files[i]
 
 # clip radius
-for (file_i in c2_files) {
+for (i in seq_len(nrow(df))) {
+  file_i = df$c2_file[i]
+  
   message('Processing ', file_i)
   message(i, ' of ', length(c2_files))
   tictoc::tic()
   
-  las = readLAS(df$c2_file[i])
+  las = readLAS(file_i)
   x_center = df$x_center[i]
   y_center = df$y_center[i]
   new_radius = df$radius[i]
-  
   las = clip_circle(las = las, xcenter = x_center, ycenter = y_center, radius = new_radius)
   
   new_file_name <- str_replace(file_i, "\\.las$", "_11dot3m\\.las")
