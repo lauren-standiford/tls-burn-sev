@@ -155,8 +155,8 @@ everything = read_csv("D:/plt_veg_type.csv")
 everything = everything %>%
   group_by(plot)
 
-las1 = readLAS("D:/c1/c1_tls_p1304_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
-las2 = readLAS("D:/c2/c2_tls_p1304_200327_crs_reg2c1_origlas.las", filter = '-keep_random_fraction 0.001')
+las1 = readLAS("D:/c1/c1_tls_p1349_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
+las2 = readLAS("D:/c2/c2_tls_p1349_200327_crs_reg2c1.las", filter = '-keep_random_fraction 0.001')
 
 x = plot(las1, pal = "red")
 plot(las2, pal = "blue", add = x)
@@ -194,10 +194,12 @@ c2_files <- list.files(
   recursive = T,
   pattern = 'reg2c1\\.las$'
 )
+c2_files <- c2_files[-c(1, 2)]
 
 i = 1
 file_i = c2_files[i]
 
+# get centers
 for (file_i in c2_files) {
   message('Processing ', file_i)
   message(i, ' of ', length(c2_files))
@@ -223,20 +225,22 @@ df$y_center <- as.numeric(df$y_center)
 df$radius <- as.numeric(df$radius)
 
 # write_csv(df, "D:/c2/c2_centers.csv")
-df = read_csv("D:/c2/c2_centers.csv")
+df = read_csv("D:/c1/c1_centers_w_c2_names.csv")
+df <- df[-c(1, 2), ]
 
 i = 1
 file_i = c2_files[i]
 
+# clip radius
 for (file_i in c2_files) {
   message('Processing ', file_i)
   message(i, ' of ', length(c2_files))
   tictoc::tic()
   
-  las = readLAS(df$file_name[i])
+  las = readLAS(df$c2_file[i])
   x_center = df$x_center[i]
   y_center = df$y_center[i]
-  new_radius = 11.3
+  new_radius = df$radius[i]
   
   las = clip_circle(las = las, xcenter = x_center, ycenter = y_center, radius = new_radius)
   
