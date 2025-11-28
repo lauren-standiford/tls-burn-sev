@@ -76,13 +76,7 @@ all_files <- list.files(
   pattern = '\\.(tif|las)$'
 )
 
-files <- str_subset(all_files, "\\bc10\\b*s\\.las|\\bc1_dtms\\b")
-files <- str_subset(all_files, "\\bc1_dtms\\b|\\bc2\\b*crs\\.las")
-
-files <- files[
-  str_detect(files, "dtm\\.tif$") |         
-    str_detect(files, "_crs\\.las$")    
-]
+files <- str_subset(all_files, "c1_dtms|c2_11dot3m")
 
 file_info <- data.frame(
   file = files,

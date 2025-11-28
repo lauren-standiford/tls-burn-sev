@@ -59,12 +59,12 @@ df_ordered_by_y <- dummy_data %>%
 #==============================================================
 
 #all_vox_data = read_csv("/Volumes/tls/all_data_res.05to.5_voxels.csv")
-all_vox_data = read_csv("D:/all_data_res.05to.5_voxels.csv")
+all_vox_data = read_csv("D:/c1c2_voxel_results/c1c2_vox0dot25_sev_veg.csv")
 
 all_together = all_vox_data %>%
   filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest",
-         Z >= 1,
-         res == 0.25) %>%
+         Z >= 1) %>%
+         #res == 0.25) %>%
   group_by(Z, LF_FOREST, sev_class, prepost) %>%
   summarise(
     total_filled = sum(n_filled),
@@ -110,8 +110,8 @@ ggsave("D:/figures/res0.25over1m_VVP_plot_111425.png", plot = p)
 rbr_bio2 = all_vox_data %>%
   filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest",
          !is.na(RBR_NN),
-         Z >= 0,
-         res == 0.25) %>%
+         Z >= 0) %>%
+        # res == 0.25) %>%
   group_by(LF_FOREST, RBR_NN, plot, prepost) %>%
   summarise(
     total_filled = sum(n_filled),

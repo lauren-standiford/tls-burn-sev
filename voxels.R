@@ -43,7 +43,16 @@ plot(vox_filtered2, color = "N2", pal = heat.colors, size = 0.5, bg = "white", v
 #               generate voxels and metrics
 #==============================================================
 
-c6c10_files <- str_subset(all_htnorm, "\\bc6\\b|\\bc10\\b")
+tls <- "D:/"
+
+norm_files <- list.files(
+  tls,
+  full.names = T,
+  recursive = T,
+  pattern = 'htnorm\\.las$'
+)
+
+las_files <- str_subset(norm_files, "c1_htnorm|c2_htnorm")
 
 # veg_df <- data.frame(
 #   file = c6c10_files,
@@ -52,15 +61,15 @@ c6c10_files <- str_subset(all_htnorm, "\\bc6\\b|\\bc10\\b")
 # )
 
 i = 1
-file_i = c6c10_files[i]
+file_i = las_files[i]
 x = list()
-res_values = c(0.05, 0.5)
+res_values = c(0.05, 0.1, 0.5)
 
-for (file_i in c6c10_files) {
+for (file_i in las_files) {
   for (res in res_values) {
   
   message('Processing ', file_i)
-  message(i, ' of ', length(c6c10_files))
+  message(i, ' of ', length(las_files))
   message('Voxel size = ', res)
   
   tictoc::tic()
@@ -88,7 +97,7 @@ for (file_i in c6c10_files) {
   
   # x[[paste0(file_i, "_", res)]] <- filled
   
-  write_csv(filled, glue("E:/voxel_results/{c}_{p}_{res}vox_summary.csv"))
+  write_csv(filled, glue("D:/c1c2_voxel_results/{c}_{p}_{res}vox_summary.csv"))
   
   tictoc::toc()
   rm(filled, vox_met, las)
@@ -102,14 +111,19 @@ write_csv(things, "E:/c6/things.csv")
 voxel_data = read_csv("E:/things.csv")
 voxel_data = read_csv("/Volumes/tls/things.csv")
 
-all_csv_files <- list.files("E:/voxel_results/", full.names = TRUE)
-one_res <- str_subset(all_csv_files, "\\.5vox_summary\\.csv$")
+all_csv_files <- list.files("D:/c1c2_voxel_results/c1_0dot25/", full.names = TRUE)
+#one_res <- str_subset(all_csv_files, "\\bc1_0dot1\\b")
 combined <- all_csv_files %>%
   lapply(read_csv) %>%
   bind_rows()
-write_csv(combined, "E:/voxel_results/c6c10_vox_data_all_res.csv")
+write_csv(combined, "D:/c1c2_voxel_results/c2_vox_data_res0dot25.csv")
 
-one_res <- read_csv("/Volumes/tls/voxel_results/c6c10_vox_data_all_res.csv")
+c1_vox <- read_csv("D:/c1c2_voxel_results/c1_0dot25/c1_vox_data_res0dot25.csv")
+c2_vox <- read_csv("D:/c1c2_voxel_results/c2_0dot25/c2_vox_data_res0dot25.csv")
+prepost_vox_data <- rbind(c1_vox, c2_vox)
+write_csv(prepost_vox_data, "D:/c1c2_voxel_results/c1c2_vox_data_res0dot25.csv")
+
+one_res <- read_csv("D:/c1c2_voxel_results/c1_0dot25/c1_vox_data_res0dot25.csv")
 
 one_res <- one_res %>%
   filter(res == 0.05,
@@ -123,6 +137,8 @@ new_df <- one_res %>%
     relationship = "many-to-many"
   )
   
+everything <- read_csv("D:/everything.csv")
+
 just_add <- everything %>%
   select(plot, campaign, RBR_NN, RBR_3x3avg, prepost, LF_FOREST, sev_class)
   # distinct()
@@ -131,10 +147,10 @@ just_add <- everything %>%
 #                        add fire sev data 
 #==============================================================
 
-mtbs <- read_csv("E:/burn_severity_3dforests/kincade_glass_fire_tls_plot_centers_sentinel2a_20m_rbr.csv")
+mtbs <- read_csv("D:/burn_severity_3dforests/kincade_glass_fire_tls_plot_centers_sentinel2a_20m_rbr.csv")
 mtbs <- read_csv("/Volumes/tls/burn_severity_3dforests/kincade_glass_fire_tls_plot_centers_sentinel2a_20m_rbr.csv")
 
-voxel_data = read_csv("/Volumes/tls/voxel_results/c6c10_vox_data_all_res.csv")
+voxel_data = read_csv("D:/c1c2_voxel_results/c1c2_vox_data_res0dot25.csv")
 
 added_sev <- left_join(
   voxel_data,
@@ -151,19 +167,33 @@ plot_info <- added_sev %>%
     perc = sum_filled/total_vox
   )
 
-plot_info <- plot_info %>%
+all_vox_data <- all_vox_data %>%
   ungroup() %>%
   mutate(prepost = case_match(
     campaign,
-    'c6' ~ 'Pre',
-    'c10' ~ 'Post'
+    'c1' ~ 'Pre',
+    'c2' ~ 'Post'
   ) |>
     fct_relevel(
       'Pre',
       'Post'
     ))
 
-write_csv(plot_info, "E:/c6/prepost_251028.csv")
+# add sev classes
+all_vox_data <- all_vox_data %>%
+  ungroup() %>%
+  mutate(sev_class = case_when(
+    RBR_NN < 130 ~ 'Low',
+    RBR_NN >= 130 & RBR_NN < 298 ~ 'Moderate',
+    RBR_NN >= 298 ~ 'High'
+  ) |>
+    fct_relevel(
+      'Low',
+      'Moderate',
+      'High'
+    ))
+
+write_csv(plot_info, "D:/c1c2_voxel_results/c1c2_byplot_wsev.csv")
 
 p <- ggplot(plot_info, aes(x = prepost, y = perc, color = RBR_NN)) + 
   geom_point() +
@@ -173,13 +203,13 @@ p <- ggplot(plot_info, aes(x = prepost, y = perc, color = RBR_NN)) +
     y = "% of filled voxels"
   )
 
-ggsave("E:/first_plot.png", plot = p)
+ggsave("D:/figures/c1c2_vvp_v1.png", plot = p)
 
 #==============================================================
 #                       add forest type data 
 #==============================================================
 
-veg_type <- read_csv("E:/plt_veg_type.csv")
+veg_type <- read_csv("D:/plt_veg_type.csv")
 veg_type <- read_csv("/Volumes/tls/plt_veg_type.csv")
 
 added_veg <- left_join(
@@ -191,7 +221,7 @@ added_veg <- left_join(
   select(Z, n_voxel, n_filled, percentage, plot, campaign, res, RBR_NN, RBR_3x3avg, LF_FOREST)
 
 
-write_csv(added_veg, "E:/c6/prepost_veg_251028.csv")
+write_csv(added_veg, "D:/c1c2_voxel_results/c1c2_vox0dot25_sev_veg.csv")
 all_stuff = read_csv("E:/prepost_veg_251028.csv")
 all_stuff = read_csv("/Volumes/tls/prepost_veg_251028.csv")
 
@@ -228,26 +258,27 @@ ggsave("/Volumes/tls/figures/forest_type_split_plot.png", plot = split_FR_plots)
 #                      missing forest type 
 #==============================================================
 
-everything = read_csv("/Volumes/tls/voxel_results/c6c10_vox_data_all_res.csv")
+everything = read_csv("D:/c1c2_voxel_results/c1c2_vox0dot25_sev_veg.csv")
 
-added_veg = added_veg %>%
-  # filter(is.na(LF_FOREST)) %>%
-  mutate(LF_FOREST = ifelse(is.na(LF_FOREST) & plot %in% c(1, 4, 14), "Hardwood Forest", LF_FOREST),
-         LF_FOREST = ifelse(is.na(LF_FOREST) & plot == 17, "Conifer Forest", LF_FOREST))
+everything = everything %>%
+  # filter(is.na(LF_FOREST))
+  mutate(LF_FOREST = ifelse(is.na(LF_FOREST) & plot == 1312, "Hardwood Forest", LF_FOREST))
+         #LF_FOREST = ifelse(is.na(LF_FOREST) & plot == 17, "Conifer Forest", LF_FOREST))
 
-field_data = readxl::read_xlsx("/Volumes/tls/3DForest_C6SaddleMountain_FieldData.xlsx", sheet = "Tree Data")
+field_data = read_csv("D:/field_data/l83df_burn_severity_veg_type.csv")
 
 field_data = field_data %>%
-  filter(Plot %in% c('p1', 'p4', 'p14', 'p17')) %>%
+  filter(Plot %in% c('p1312', 'p1313')) %>%
   select(Plot, DBH, Species)
 
 #==============================================================
 #                           missing RBR 
 #==============================================================
 
-everything = read_csv("/Volumes/tls/everything.csv")
+everything = read_csv("D:/c1c2_voxel_results/c1c2_vox0dot25_sev_veg.csv")
+write_csv(all_vox_data, "D:/c1c2_voxel_results/c1c2_vox0dot25_sev_veg.csv")
 
-noRBR = added_veg %>%
+noRBR = everything %>%
   filter(is.na(RBR_NN)) %>%
   select(plot, campaign) %>%
   distinct()

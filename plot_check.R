@@ -155,8 +155,8 @@ everything = read_csv("D:/plt_veg_type.csv")
 everything = everything %>%
   group_by(plot)
 
-las1 = readLAS("D:/c1/c1_tls_p1349_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
-las2 = readLAS("D:/c2/c2_tls_p1349_200327_crs_reg2c1.las", filter = '-keep_random_fraction 0.001')
+las1 = readLAS("D:/c1_htnorm/c1_tls_p1312_201019_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.001')
+las2 = readLAS("D:/c2_htnorm/c2_tls_p1312_200327_reg2c1_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.001')
 
 x = plot(las1, pal = "red")
 plot(las2, pal = "blue", add = x)
@@ -236,7 +236,7 @@ for (i in seq_len(nrow(df))) {
   file_i = df$c2_file[i]
   
   message('Processing ', file_i)
-  message(i, ' of ', length(c2_files))
+  message(i, ' of ', nrow(df))
   tictoc::tic()
   
   las = readLAS(file_i)
