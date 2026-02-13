@@ -77,9 +77,56 @@ c15_all_res <- bind_rows(vox_005_combined, vox_01_combined, vox_05_combined)
 write_csv(c15_all_res, "E:/voxel_results/c6c10c15_vox_all_res.csv")
 
 # Read and combine c6c10 and c15 all resolutions data
-c6c10_data <- read_csv("E:/voxel_results/c6c10_vox_data_all_res.csv")
-c15_data <- read_csv("E:/voxel_results/c15_vox_005_01_05.csv")
+c6c10_data <- read_csv("E:/voxel_results/sm_combined_voxel_results/c6c10_vox_data_all_res.csv")
+c15_data <- read_csv("E:/voxel_results/sm_combined_voxel_results/c15_vox_005_01_05.csv")
 
 combined_all <- bind_rows(c6c10_data, c15_data)
-write_csv(combined_all, "E:/voxel_results/c6c10_c15_combined_all.csv")
+write_csv(combined_all, "E:/voxel_results/c6c10c15_vox_all_res.csv")
+
+vox_data <- read_csv("E:/voxel_results/c6c10c15_vox_all_res.csv") %>%
+  filter(res == 0.05,
+  campaign %in% c("c6", "c15"),
+  Z >= 0) %>%
+  mutate(plot = str_remove(plot, "^p"))
+view(vox_data)
+# add veg/fire data
+veg_fire_data <- read_csv("E:/everything.csv") %>%
+  select(plot, campaign, RBR_NN, RBR_3x3avg, prepost, LF_FOREST, sev_class) %>%
+  mutate(plot = as.character(plot)) %>%
+  distinct(plot, campaign, .keep_all = TRUE)
+
+view(vox_veg_fire)
+
+vox_veg_fire <- vox_data %>%
+  left_join(
+    veg_fire_data,
+    by = c("plot", "campaign")
+  ) %>%
+  mutate(prepost = if_else(campaign == "c15" & prepost == "post", "12mo_post", prepost))
+
+View(vox_veg_fire)
+
+# ignore what's above this
+
+vox_data <- read_csv("E:/voxel_results/c6c10c15_vox_all_res.csv") %>%
+  filter(res == 0.05,
+  campaign %in% c("c6", "c15"),
+  Z >= 0) %>%
+  mutate(plot = str_remove(plot, "^p"))
+view(vox_data)
+
+veg_fire_data <- read_csv("E:/all_data_res.05to.5_voxels.csv") %>%
+  select(Z, plot, campaign, RBR_NN, RBR_3x3avg, prepost, LF_FOREST, sev_class) %>%
+  mutate(plot = as.character(plot)) %>%
+  filter(Z == 1) %>%
+  distinct(plot, campaign, .keep_all = TRUE)
+view(veg_fire_data)
+
+# Join veg_fire_data to vox_data
+vox_data <- vox_data %>%
+  left_join(
+    veg_fire_data %>% select(plot, campaign, RBR_NN, RBR_3x3avg, LF_FOREST, sev_class),
+    by = c("plot", "campaign")
+  )
+view(vox_data)
 
