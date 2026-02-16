@@ -1,5 +1,5 @@
 library(tidyverse)
-library("lidR")
+library(lidR)
 
 # df = tibble(
 #   file_name = c(1),
@@ -155,8 +155,8 @@ everything = read_csv("D:/plt_veg_type.csv")
 everything = everything %>%
   group_by(plot)
 
-las1 = readLAS("D:/c1_htnorm/c1_tls_p1312_201019_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.001')
-las2 = readLAS("D:/c2_htnorm/c2_tls_p1312_200327_reg2c1_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.001')
+las1 = readLAS("E:/c1/c1_tls_p1301_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
+las2 = readLAS("E:/c5/c5_tls_p1301_reg2c1_200922_11dot3m.las", filter = '-keep_random_fraction 0.001')
 
 x = plot(las1, pal = "red")
 plot(las2, pal = "blue", add = x)
@@ -196,13 +196,20 @@ c2_files <- list.files(
 )
 c2_files <- c2_files[-c(1, 2)]
 
+c5_files <- list.files("E:/c5", full.names = TRUE)
+df$file_name <- as.character(df$file_name)
+df$campaign <- as.character(df$campaign)
+df$plot <- as.character(df$plot)
+
 i = 1
-file_i = c2_files[i]
+file_i = c5_files[i]
+
+c1_files <- list.files("E:/c1", full.names = TRUE, pattern = '3m\\.las$')
 
 # get centers
-for (file_i in c2_files) {
+for (file_i in c5_files) {
   message('Processing ', file_i)
-  message(i, ' of ', length(c2_files))
+  message(i, ' of ', length(c5_files))
   las = readLASheader(file_i)
   x = st_bbox(las)
   r = ((x$xmax - x$xmin)/2)
@@ -225,15 +232,28 @@ df$y_center <- as.numeric(df$y_center)
 df$radius <- as.numeric(df$radius)
 
 # write_csv(df, "D:/c2/c2_centers.csv")
-df = read_csv("D:/c1/c1_centers_w_c2_names.csv")
+df = read_csv("E:/c2/c2_centers.csv")
 df <- df[-c(1, 2), ]
+
+# Create dataframe with file names and extracted plot numbers
+c5_df <- tibble(
+  file_name = c5_files,
+  plot = str_match(c5_files, "p(\\d+)")[,2]
+)
+
+# Add c5 file names to df by matching plot values
+df <- df %>%
+  left_join(c5_df, by = "plot") %>%
+  filter(!is.na(file_name.y))
+
+df =read_csv("E:/c5/c5_files_c2_centers.csv")
 
 i = 1
 file_i = c2_files[i]
 
 # clip radius
 for (i in seq_len(nrow(df))) {
-  file_i = df$c2_file[i]
+  file_i = df$c5_file_name[i]
   
   message('Processing ', file_i)
   message(i, ' of ', nrow(df))
