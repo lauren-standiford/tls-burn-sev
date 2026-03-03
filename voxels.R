@@ -2,19 +2,6 @@ library(lidR)
 library(tidyverse)
 library(glue)
 
-tls <- "E:/"
-tls <- "/Volumes/tls"
-
-all_htnorm <- list.files(
-  tls,
-  full.names = T,
-  recursive = T,
-  pattern = 'htnorm\\.las$'
-)
-
-c6_files <- str_subset(all_htnorm, "\\bc6\\b")
-c10_files <- str_subset(all_htnorm, "\\bc10\\b")
-
 #==============================================================
 #                      visualize voxels 
 #==============================================================
@@ -43,26 +30,12 @@ plot(vox_filtered2, color = "N2", pal = heat.colors, size = 0.5, bg = "white", v
 #               generate voxels and metrics
 #==============================================================
 
-tls <- "E:/"
-
-norm_files <- list.files(
-  tls,
-  full.names = T,
-  recursive = T,
-  pattern = 'htnorm\\.las$'
-)
+norm_files <- list.files("E:/", full.names = T, recursive = T, pattern = 'htnorm\\.las$')
 
 las_files <- str_subset(norm_files, "c1_htnorm|c2_htnorm")
 
-# veg_df <- data.frame(
-#   file = c6c10_files,
-#   plot = str_extract(basename(c6c10_files), "p\\d{1,4}"),
-#   veg_density = ""
-# )
-
 i = 1
 file_i = las_files[i]
-x = list()
 res_values = c(0.05, 0.1, 0.5)
 
 for (file_i in las_files) {
@@ -74,15 +47,10 @@ for (file_i in las_files) {
   
   tictoc::tic()
   las <- readLAS(file_i)
-  # voxels <- voxelize_points(las, res = 0.1)
   vox_met <- voxel_metrics(las, ~list(N = length(Z)), res = res, all_voxels = TRUE)
-  # vox_file_name <- str_replace(file_i, "\\.las$", ".csv")
   
   c <- str_extract(basename(file_i), "c\\d{1,4}")
   p <- str_extract(basename(file_i), "p\\d{1,4}")
-                   
-  # vox_file_name <- glue("{c}_{p}_{res}vox_metrics.csv")
-  # write_csv(vox_met, glue("{c}_{p}_{res}vox_metrics.csv"))
   
   filled <- vox_met %>%
     group_by(Z) %>%
@@ -95,8 +63,6 @@ for (file_i in las_files) {
                campaign = c,
                res = res)
   
-  # x[[paste0(file_i, "_", res)]] <- filled
-  
   write_csv(filled, glue("D:/c1c2_voxel_results/{c}_{p}_{res}vox_summary.csv"))
   
   tictoc::toc()
@@ -106,10 +72,9 @@ for (file_i in las_files) {
   i = i + 1
 }
 
-things = bind_rows(x)
-write_csv(things, "E:/c6/things.csv")
-voxel_data = read_csv("E:/things.csv")
-voxel_data = read_csv("/Volumes/tls/things.csv")
+#==============================================================
+#                 combine plot-level voxel data
+#==============================================================
 
 all_csv_files <- list.files("D:/c1c2_voxel_results/c1_0dot25/", full.names = TRUE)
 #one_res <- str_subset(all_csv_files, "\\bc1_0dot1\\b")

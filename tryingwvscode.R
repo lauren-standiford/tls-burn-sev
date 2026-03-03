@@ -4,15 +4,17 @@ library(glue)
 library(stringr)
 
 # Get files
-all_files <- list.files("E:/c1", full.names = TRUE)
-las_files <- all_files[str_detect(all_files, "htnorm\\.las$")]
+all_files <- list.files("E:/c2", full.names = TRUE)
+las_files <- all_files[str_detect(all_files, "m\\.las$")]
 las_files
 
 # Calculate voxel metrics for each plot and save results
+i = 1
+file_i = las_files[i]
 x = list()
 res_values = c(0.5)
 
-for (i in 12:length(las_files)) {
+for (file_i in las_files) {
   file_i <- las_files[i]
   for (res in res_values) {
   
@@ -55,21 +57,24 @@ for (i in 12:length(las_files)) {
 }
 
 # Get files from c15_voxel_results 
-vox_files <- list.files("E:/voxel_results/c15_voxel_results", full.names = TRUE)
+vox_files <- list.files("E:/voxel_results/c1_voxel_results/c1_vox_05", full.names = TRUE)
 
 vox_005_files <- vox_files[str_detect(vox_files, "0\\.05")]
 vox_01_files <- vox_files[str_detect(vox_files, "0\\.1")]
 vox_05_files <- vox_files[str_detect(vox_files, "0\\.5")]
 
 # Read and combine all files for each voxel size, then save 
-vox_005_combined <- map_df(vox_005_files, read_csv)
+vox_005_combined <- map_df(vox__files, read_csv)
 write_csv(vox_005_combined, "E:/voxel_results/c15_voxel_results/c15_vox_005_combined.csv")
 
 vox_01_combined <- map_df(vox_01_files, read_csv)
 write_csv(vox_01_combined, "E:/voxel_results/c15_voxel_results/c15_vox_01_combined.csv")
 
 vox_05_combined <- map_df(vox_05_files, read_csv)
-write_csv(vox_05_combined, "E:/voxel_results/c15_voxel_results/c15_vox_05_combined.csv")
+write_csv(vox_05_combined, "E:/voxel_results/c1_voxel_results/c1_vox_05_combined.csv")
+
+vox_combined <- map_df(vox_files, read_csv)
+write_csv(vox_combined, "E:/voxel_results/c1_voxel_results/c1_vox_combined.csv")
 
 # Combine all resolutions for c15
 c15_all_res <- bind_rows(vox_005_combined, vox_01_combined, vox_05_combined)
@@ -95,3 +100,5 @@ view(all_vox)
 
 # Add prepost
 
+x = readLAS("E:/c1/c1_tls_p1301_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
+plot(x)
