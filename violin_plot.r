@@ -55,7 +55,7 @@ df_ordered_by_y <- dummy_data %>%
   mutate(prepost = fct_relevel(prepost, 'Pre', 'Post'))
 
 #==============================================================
-#                          dfs and VVP
+#                          dfs and VVP by fire sev
 #==============================================================
 
 #all_vox_data = read_csv("/Volumes/tls/all_data_res.05to.5_voxels.csv")
@@ -104,28 +104,82 @@ p
 ggsave("D:/figures/res0.25over1m_VVP_plot_111425.png", plot = p)
 
 #==============================================================
-#                    plot rbr vs biomass change 
+#                          
 #==============================================================
 
-rbr_bio2 = all_vox_data %>%
+#all_vox_data = read_csv("/Volumes/tls/all_data_res.05to.5_voxels.csv")
+all_vox_data = read_csv("D:/c1c2_voxel_results/c1c2_vox0dot25_sev_veg.csv")
+
+all_together = all_vox_data %>%
   filter(!LF_FOREST == "Mixed Conifer-Hardwood Forest",
-         !is.na(RBR_NN),
-         Z >= 0) %>%
-        # res == 0.25) %>%
-  group_by(LF_FOREST, RBR_NN, plot, prepost) %>%
+         Z >= 1) %>%
+         #res == 0.25) %>%
+  group_by(Z, LF_FOREST, sev_class, prepost) %>%
   summarise(
     total_filled = sum(n_filled),
     total_overall = sum(n_voxel),
     perc = total_filled/total_overall) %>%
-  reframe(change_prepost = (perc[prepost == "Pre"]) - (perc[prepost == "Post"]))
+  # ungroup() %>%
+  select(Z, perc, LF_FOREST, sev_class, prepost) %>%
+  group_by(Z, LF_FOREST, sev_class, prepost) %>%
+  rowwise() %>%
+  mutate(
+    r = map(Z, ~ rep.int(.x, floor(perc * 100))
+    )) %>%
+  unnest(r) %>%
+  ungroup() %>%
+  filter(!is.na(sev_class)) %>%
+  arrange(Z) %>%
+  mutate(sev_class = fct_relevel(sev_class,
+                                 'Low',
+                                 'Moderate',
+                                 'High'
+  )) %>%
+  mutate(prepost = fct_relevel(prepost, 'Pre', 'Post'))
+
+p = ggplot(all_together,
+       mapping = aes(perc, Z, color = LF_FOREST, linetype = prepost)) +
+  # geom_point() +
+  geom_path() +
+  facet_grid(~ sev_class) +
+  labs(x = "Percentage of filled voxels", 
+       y = "Height (m)", 
+       #title = "VVP Plot for 0.25 res voxels over 1m",
+       color = "Forest Type",
+       linetype = "Wildfire Status")
+p
+
+# ggsave("/Volumes/tls/figures/res0.05over1m_VVP_plot.png", plot = p)
+ggsave("D:/figures/res0.25over1m_VVP_plot_111425.png", plot = p)
 
 
-p = ggplot(rbr_bio2, mapping = aes(change_prepost, RBR_NN, color = LF_FOREST)) +
+#==============================================================
+#                    plot 
+#==============================================================
+
+vox_data <- read_csv("E:/voxel_results/c6c10c15_vox_all_res.csv")
+
+vox_calc = vox_data %>%
+  filter(LF_FOREST == "Hardwood Forest",
+         #!is.na(RBR_NN),
+         Z >= 0,
+        res == 0.5,
+        !campaign == "c15") %>%
+  group_by(LF_FOREST, RBR, campaign, Z) %>%
+  summarise(
+    total_filled = sum(n_filled),
+    total_overall = sum(n_voxel),
+    perc = total_filled/total_overall) %>%
+  group_by(LF_FOREST, RBR, Z) %>%
+  reframe(change_prepost = (perc[campaign == "c6"]) - (perc[campaign == "c10"]))
+
+
+p = ggplot(vox_calc, mapping = aes(change_prepost, Z, color = RBR)) +
   geom_point() +
-  geom_smooth(method = "lm") +
+  #geom_smooth(method = "lm") +
   labs(x = "Percentage of biomass loss",
-       y = "RBR",
-       color = "Forest Type")
+       y = "Ht",
+       color = "RBR")
 
 p
 
