@@ -92,9 +92,9 @@ for (file_i in las_files) {
 
 ######################### check crs status ####################
 
-las_files <- list.files("E:/c5", full.names = TRUE, pattern = "3m\\.las$")
+las_files <- list.files("E:/c2", full.names = TRUE, pattern = "7\\.las$")
 las_files
-las_ref <- readLAS("E:/c6/c6_tls_p1_200811_11dot3m.las", filter = '-keep_random_fraction 0.0001')
+las_ref <- readLAS("E:/c2/c2_tls_p1301_200327_reg2c1_crs.las", filter = '-keep_random_fraction 0.0001')
 st_crs(las_ref)
 i = 1
 file_i = las_files[i]
@@ -104,8 +104,9 @@ for (file_i in las_files) {
   message('Processing ', file_i)
   message(i, ' of ', length(las_files))
   las = readLAS(file_i, filter = '-keep_random_fraction 0.000001')
-  #message(st_crs(las) == st_crs("EPSG:26910"))
-  message(st_crs(las) == st_crs(las_ref))
+  st_crs(las)
+  #message("EPSG:26910 ", st_crs(las) == st_crs("EPSG:26910"))
+  #message("manual input ", st_crs(las) == st_crs(las_ref))
   
   i = i + 1
 }
@@ -116,9 +117,8 @@ for (file_i in las_files) {
 
 library(rgl)
 
-las1 = readLAS("E:/c1/c1_clipped/c1_tls_p1349_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
-las2 = readLAS("E:/c2/c2_tls_p1349_200327_reg2c1_11dot3m.las", filter = '-keep_random_fraction 0.001')
-
+las1 = readLAS("E:/c1/c1_clipped/c1_tls_p1304_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
+las2 = readLAS("E:/c2/c2_tls_p1304_200327_reg2c1_crs.las", filter = '-keep_random_fraction 0.001')
 x = plot(las1, pal = "red")
 plot(las2, pal = "blue", add = x)
 
