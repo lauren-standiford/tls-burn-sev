@@ -65,35 +65,29 @@ df[104, "quality"] <- 1
 #                         update CRS
 #==============================================================
 
-las_files <- list.files("E:/c2", full.names = TRUE, pattern = "\\.las$")
+las_files <- list.files("E:/c5", full.names = TRUE, pattern = "2\\.las$")
 
 i = 1
 file_i = las_files[i]
 
 for (file_i in las_files) {
   file_i = las_files[i]
-  #file_i
   message('Processing ', file_i)
   message(i, ' of ', length(las_files))
   tictoc::tic()
   las = readLAS(file_i)
   st_crs(las) = st_crs("EPSG:26910")
-  #st_crs(las) = st_crs(x)
-  #projection(las) <- "EPSG:26910"
-  #st_crs(las)
-  #file_name <- str_replace(file_i, "\\.las$", "_crs\\.las")
   writeLAS(las, file_i)
   tictoc::toc()
-  
   i = i + 1
 }
 
 ######################### check crs status ####################
 
-las_files <- list.files("E:/c2", full.names = TRUE, pattern = "\\.las$")
+las_files <- list.files("E:/c5", full.names = TRUE, pattern = "2\\.las$")
 las_files
-las_ref <- readLAS("E:/c2/c2_tls_p1301_200327_reg2c1_crs.las", filter = '-keep_random_fraction 0.0001')
-st_crs(las_ref)
+#las_ref <- readLAS("E:/c2/c2_tls_p1301_200327_reg2c1.las", filter = '-keep_random_fraction 0.0001')
+#st_crs(las_ref)
 i = 1
 file_i = las_files[i]
 
@@ -102,8 +96,8 @@ for (file_i in las_files) {
   message('Processing ', file_i)
   message(i, ' of ', length(las_files))
   las = readLAS(file_i, filter = '-keep_random_fraction 0.000001')
-  message("CRS for ", file_i, ": ", st_crs(las))
-  #message("EPSG:26910 ", st_crs(las) == st_crs("EPSG:26910"))
+  #message("CRS for ", file_i, ": ", st_crs(las))
+  message("EPSG:26910 ", st_crs(las) == st_crs("EPSG:26910"))
   #message("manual input ", st_crs(las) == st_crs(las_ref))
   
   i = i + 1
@@ -115,13 +109,12 @@ for (file_i in las_files) {
 
 library(rgl)
 
-las1 = readLAS("E:/c1/c1_tls_p1329_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
-las2 = readLAS("E:/c2/c2_tls_p1329_200327_reg2c1_11dot3m.las", filter = '-keep_random_fraction 0.001')
+las1 = readLAS("E:/c1/c1_tls_p1335_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
+las2 = readLAS("E:/c5/c5_tls_p1335_reg2c1_200922_11dot3m.las", filter = '-keep_random_fraction 0.001')
 x = plot(las1, pal = "red")
 plot(las2, pal = "blue", add = x)
 
 st_crs(las2) == st_crs(las1)
-st_crs(las1)
 
 #==============================================================
 #                calculate plot centers & radius
@@ -136,24 +129,25 @@ df = tibble(
   y_center = c(1),
 )
 
-df$file_name <- as.character(df$file_name)
+df$file_name <- as.character(df$c1_file_name)
 df$campaign <- as.character(df$campaign)
 df$plot <- as.character(df$plot)
 
-c2_files <- list.files("E:/c2", full.names = TRUE, pattern = 'c1\\.las$')
-i = 1
-file_i = c1_files[i]
+files <- list.files("E:/c1", full.names = TRUE, pattern = '\\.las$')
+i = 6
+file_i = files[i]
+file_i
 
-for (file_i in c1_files) {
+for (file_i in files) {
   message('Processing ', file_i)
-  message(i, ' of ', length(c1_files))
+  message(i, ' of ', length(files))
   las = readLASheader(file_i)
   x = st_bbox(las)
   r = ((x$xmax - x$xmin)/2)
   
   df = df %>%
     add_row(
-      file_name = file_i,
+      c1_file_name = file_i,
       campaign = str_extract(file_i, "c\\d+"),
       plot = str_match(file_i, "p(\\d+)")[,2],
       radius = r,
@@ -168,8 +162,8 @@ df$x_center <- as.numeric(df$x_center)
 df$y_center <- as.numeric(df$y_center)
 df$radius <- as.numeric(df$radius)
 
-write_csv(df, "E:/c2/c2_names_c1_centers.csv")
-df = read_csv("E:/c2/c2_names_c1_centers.csv")
+write_csv(df, "E:/c1/c1_centers_c1c2c5names.csv")
+df = read_csv("E:/c1/c1_centers_c1c2c5names.csv")
 df <- df[-c(1, 2), ]
 
 # create df with file names and plots, then match
@@ -186,9 +180,9 @@ df <- df %>%
 #                         clip radius
 #==============================================================
 
-df = read_csv("E:/c2/c2_names_c1_centers.csv")
+df = read_csv("E:/c1/c1_centers_c1c2c5names.csv")
 
-i = 6
+i = 2
 file_i = df$c2_file_name[i]
 file_i
 

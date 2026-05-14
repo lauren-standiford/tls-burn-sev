@@ -30,41 +30,27 @@ i = 1
 c6_files = c6_files[i:length(c6_files)]
 
 for (file in c6_files) {
-  
   message('Processing ', file)
   message(i, ' of ', length(c6_files))
   tictoc::tic()
   las <- readLAS(file)
-
   # classified_las <- classify_ground(las, algorithm = csf())
-
   # classified_file_name <- str_replace(file, "\\.las$", "_grndcls.las")
-  # 
   # writeLAS(classified_las, classified_file_name)
-
   # dtm <- rasterize_terrain(classified_las, res = 0.25, algorithm = tin())
-  
   dtm <- rasterize_terrain(las, res = 0.25, algorithm = tin())
-
   dtm_file_name <- str_replace(file, "\\.las$", "_dtm.tif")
-
   terra::writeRaster(dtm, dtm_file_name, overwrite = TRUE)
-  
   las_norm <- las - dtm
-  
   htnorm_file_name <- str_replace(file, "\\.las$", "_htnorm.las")
-  
   writeLAS(las_norm, htnorm_file_name)
-  
   tictoc::toc()
-  
   i = i + 1
-
 }
 
 
-# ==============================================================
-#                          ht normalization 
+# =============================================================
+#                          ht normalization
 #==============================================================
 
 tls <- "E:/"
