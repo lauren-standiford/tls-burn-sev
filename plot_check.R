@@ -65,12 +65,10 @@ df[104, "quality"] <- 1
 #                         update CRS
 #==============================================================
 
-las_files <- list.files("E:/c2", full.names = TRUE, pattern = "c1\\.las$")
+las_files <- list.files("E:/c2", full.names = TRUE, pattern = "\\.las$")
 
 i = 1
 file_i = las_files[i]
-
-st_crs(las)
 
 for (file_i in las_files) {
   file_i = las_files[i]
@@ -83,8 +81,8 @@ for (file_i in las_files) {
   #st_crs(las) = st_crs(x)
   #projection(las) <- "EPSG:26910"
   #st_crs(las)
-  file_name <- str_replace(file_i, "\\.las$", "_crs\\.las")
-  writeLAS(las, file_name)
+  #file_name <- str_replace(file_i, "\\.las$", "_crs\\.las")
+  writeLAS(las, file_i)
   tictoc::toc()
   
   i = i + 1
@@ -92,7 +90,7 @@ for (file_i in las_files) {
 
 ######################### check crs status ####################
 
-las_files <- list.files("E:/c2", full.names = TRUE, pattern = "7\\.las$")
+las_files <- list.files("E:/c2", full.names = TRUE, pattern = "\\.las$")
 las_files
 las_ref <- readLAS("E:/c2/c2_tls_p1301_200327_reg2c1_crs.las", filter = '-keep_random_fraction 0.0001')
 st_crs(las_ref)
@@ -104,7 +102,7 @@ for (file_i in las_files) {
   message('Processing ', file_i)
   message(i, ' of ', length(las_files))
   las = readLAS(file_i, filter = '-keep_random_fraction 0.000001')
-  st_crs(las)
+  message("CRS for ", file_i, ": ", st_crs(las))
   #message("EPSG:26910 ", st_crs(las) == st_crs("EPSG:26910"))
   #message("manual input ", st_crs(las) == st_crs(las_ref))
   
@@ -117,12 +115,13 @@ for (file_i in las_files) {
 
 library(rgl)
 
-las1 = readLAS("E:/c1/c1_clipped/c1_tls_p1304_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
-las2 = readLAS("E:/c2/c2_tls_p1304_200327_reg2c1_crs.las", filter = '-keep_random_fraction 0.001')
+las1 = readLAS("E:/c1/c1_tls_p1329_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
+las2 = readLAS("E:/c2/c2_tls_p1329_200327_reg2c1_11dot3m.las", filter = '-keep_random_fraction 0.001')
 x = plot(las1, pal = "red")
 plot(las2, pal = "blue", add = x)
 
 st_crs(las2) == st_crs(las1)
+st_crs(las1)
 
 #==============================================================
 #                calculate plot centers & radius
@@ -189,8 +188,9 @@ df <- df %>%
 
 df = read_csv("E:/c2/c2_names_c1_centers.csv")
 
-i = 1
-file_i = c2_files[i]
+i = 6
+file_i = df$c2_file_name[i]
+file_i
 
 for (i in seq_len(nrow(df))) {
   file_i = df$c2_file_name[i]
@@ -205,7 +205,7 @@ for (i in seq_len(nrow(df))) {
   new_radius = df$radius[i]
   las = clip_circle(las = las, xcenter = x_center, ycenter = y_center, radius = new_radius)
   
-  new_file_name <- str_replace(file_i, "_crs\\.las$", "_11dot3m\\.las")
+  new_file_name <- str_replace(file_i, "\\.las$", "_11dot3m\\.las")
   writeLAS(las, new_file_name)
   tictoc::toc()
   
