@@ -3,7 +3,7 @@ library(tidyverse)
 library(glue)
 
 #==============================================================
-#                      visualize voxels 
+#                      visualize voxels
 #==============================================================
 
 las <- readLAS("/Volumes/tls/c1/c1_tls_p1301_201019_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.0001')
@@ -27,31 +27,24 @@ vox_filtered2 <- vox_met2[vox_met2$N2 >= 500 & vox_met2$N2 <= 4500, ]
 plot(vox_filtered2, color = "N2", pal = heat.colors, size = 0.5, bg = "white", voxel = TRUE)
 
 #==============================================================
-#               generate voxels and metrics
+#            generate voxels and metrics by plot
 #==============================================================
 
-norm_files <- list.files("E:/", full.names = T, recursive = T, pattern = 'htnorm\\.las$')
-
-las_files <- str_subset(norm_files, "c1_htnorm|c2_htnorm")
-
+las_files <- list.files("E:/c1", full.names = TRUE, pattern = 'htnorm\\.las$')
 i = 1
 file_i = las_files[i]
 res_values = c(0.05, 0.1, 0.5)
 
 for (file_i in las_files) {
   for (res in res_values) {
-  
   message('Processing ', file_i)
   message(i, ' of ', length(las_files))
   message('Voxel size = ', res)
-  
   tictoc::tic()
   las <- readLAS(file_i)
   vox_met <- voxel_metrics(las, ~list(N = length(Z)), res = res, all_voxels = TRUE)
-  
   c <- str_extract(basename(file_i), "c\\d{1,4}")
   p <- str_extract(basename(file_i), "p\\d{1,4}")
-  
   filled <- vox_met %>%
     group_by(Z) %>%
     summarize(
@@ -62,9 +55,7 @@ for (file_i in las_files) {
     add_column(plot = p,
                campaign = c,
                res = res)
-  
-  write_csv(filled, glue("D:/c1c2_voxel_results/{c}_{p}_{res}vox_summary.csv"))
-  
+  write_csv(filled, glue("E:/c1_vox/{c}_{p}_{res}m_vox.csv"))
   tictoc::toc()
   rm(filled, vox_met, las)
   gc()
@@ -76,19 +67,17 @@ for (file_i in las_files) {
 #                 combine plot-level voxel data
 #==============================================================
 
-all_csv_files <- list.files("D:/c1c2_voxel_results/c1_0dot25/", full.names = TRUE)
-#one_res <- str_subset(all_csv_files, "\\bc1_0dot1\\b")
-combined <- all_csv_files %>%
+all_plots <- list.files("E:/c1/c1_vox/0dot5m", full.names = TRUE) %>%
   lapply(read_csv) %>%
   bind_rows()
-write_csv(combined, "D:/c1c2_voxel_results/c2_vox_data_res0dot25.csv")
+write_csv(all_plots, "E:/c1_vox/0dot5m/c1_vox_0dot5m.csv")
 
-c1_vox <- read_csv("D:/c1c2_voxel_results/c1_0dot25/c1_vox_data_res0dot25.csv")
-c2_vox <- read_csv("D:/c1c2_voxel_results/c2_0dot25/c2_vox_data_res0dot25.csv")
+c1_vox <- read_csv("E:/c1c2_voxel_results/c1_0dot25/c1_vox_data_res0dot25.csv")
+c2_vox <- read_csv("E:/c1c2_voxel_results/c2_0dot25/c2_vox_data_res0dot25.csv")
 prepost_vox_data <- rbind(c1_vox, c2_vox)
-write_csv(prepost_vox_data, "D:/c1c2_voxel_results/c1c2_vox_data_res0dot25.csv")
+write_csv(prepost_vox_data, "E:/c1c2_voxel_results/c1c2_vox_data_res0dot25.csv")
 
-one_res <- read_csv("D:/c1c2_voxel_results/c1_0dot25/c1_vox_data_res0dot25.csv")
+one_res <- read_csv("E:/c1c2_voxel_results/c1_0dot25/c1_vox_data_res0dot25.csv")
 
 one_res <- one_res %>%
   filter(res == 0.05,
@@ -102,20 +91,23 @@ new_df <- one_res %>%
     relationship = "many-to-many"
   )
   
-everything <- read_csv("D:/everything.csv")
 
 just_add <- everything %>%
   select(plot, campaign, RBR_NN, RBR_3x3avg, prepost, LF_FOREST, sev_class)
   # distinct()
 
 #==============================================================
-#                        add fire sev data 
+#             add fire sev data, forest type, pre/post
 #==============================================================
 
-mtbs <- read_csv("D:/burn_severity_3dforests/kincade_glass_fire_tls_plot_centers_sentinel2a_20m_rbr.csv")
-mtbs <- read_csv("/Volumes/tls/burn_severity_3dforests/kincade_glass_fire_tls_plot_centers_sentinel2a_20m_rbr.csv")
 
-voxel_data = read_csv("D:/c1c2_voxel_results/c1c2_vox_data_res0dot25.csv")
+#==============================================================
+#                        add fire sev data
+#==============================================================
+
+mtbs <- read_csv("E:/burn_severity_3dforests/kincade_glass_fire_tls_plot_centers_sentinel2a_20m_rbr.csv")
+
+voxel_data = read_csv("E:/c1c2_voxel_results/c1c2_vox_data_res0dot25.csv")
 
 added_sev <- left_join(
   voxel_data,

@@ -2,7 +2,7 @@ library(tidyverse)
 library(lidR)
 
 #==============================================================
-#             view las files and add to QC df 
+#             view las files and add to QC df
 #==============================================================
 # df = tibble(
 #   file_name = c(1),
@@ -52,7 +52,7 @@ i = i + 1
 write_csv(df, "plot_check.csv")
 
 #==============================================================
-#                 check ranges/update df value                   
+#                 check ranges/update df value
 #==============================================================
 
 c15_range_x <- range(las@data$X)
@@ -104,13 +104,13 @@ for (file_i in las_files) {
 }
 
 #==============================================================
-#                     plot pre/post together 
+#                     plot pre/post together
 #==============================================================
 
 library(rgl)
 
-las1 = readLAS("E:/c1/c1_tls_p1335_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
-las2 = readLAS("E:/c5/c5_tls_p1335_reg2c1_200922_11dot3m.las", filter = '-keep_random_fraction 0.001')
+las1 = readLAS("E:/c1/c1_tls_p1335_201019_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.001')
+las2 = readLAS("E:/c5/c5_tls_p1335_reg2c1_200922_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.001')
 x = plot(las1, pal = "red")
 plot(las2, pal = "blue", add = x)
 
@@ -205,17 +205,3 @@ for (i in seq_len(nrow(df))) {
   
   i = i + 1
 }
-
-############## check headers? ################
-las2@header[["X offset"]]
-las1@header[["X offset"]]
-
-las2@header[["X offset"]] <- las1@header[["X offset"]]
-las2@header[["Y offset"]] <- las1@header[["Y offset"]]
-las2@header[["Z offset"]] <- las1@header[["Z offset"]]
-
-las2@header[["X scale factor"]] <- las1@header[["X scale factor"]]
-las2@header[["Y scale factor"]] <- las1@header[["Y scale factor"]]
-las2@header[["Z scale factor"]] <- las1@header[["Z scale factor"]]
-
-writeLAS(las2, "D:/c2_clipped/c2_1301_fixedmaybe.las")
