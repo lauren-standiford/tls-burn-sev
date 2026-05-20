@@ -109,8 +109,8 @@ for (file_i in las_files) {
 
 library(rgl)
 
-las1 = readLAS("E:/c1/c1_tls_p1335_201019_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.001')
-las2 = readLAS("E:/c5/c5_tls_p1335_reg2c1_200922_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.001')
+las1 = readLAS("E:/c6/c6_tls_p19_200817_11dot3m_htnorm.las", filter = '-drop_z_below 35')
+las2 = readLAS("E:/c10/c10_tls_p19_reg2c6_220321_11dot3m_htnorm.las", filter = '-drop_z_below 35')
 x = plot(las1, pal = "red")
 plot(las2, pal = "blue", add = x)
 
@@ -205,3 +205,11 @@ for (i in seq_len(nrow(df))) {
   
   i = i + 1
 }
+#==============================================================
+#                     view sections of plots
+#==============================================================
+
+las1 = readLAS("E:/c6/c6_tls_p19_200817_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.001')
+las2 = readLAS("E:/c10/c10_tls_p19_reg2c6_220321_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.001')
+x = plot(las1, pal = "red")
+plot(las2, pal = "blue", add = x)

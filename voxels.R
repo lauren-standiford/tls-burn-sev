@@ -33,7 +33,7 @@ plot(vox_filtered2, color = "N2", pal = heat.colors, size = 0.5, bg = "white", v
 las_files <- list.files("E:/c1", full.names = TRUE, pattern = 'htnorm\\.las$')
 i = 1
 file_i = las_files[i]
-res_values = c(0.05, 0.1, 0.5)
+res_values = c(0.1)
 
 for (file_i in las_files) {
   for (res in res_values) {
@@ -55,7 +55,8 @@ for (file_i in las_files) {
     add_column(plot = p,
                campaign = c,
                res = res)
-  write_csv(filled, glue("E:/c1_vox/{c}_{p}_{res}m_vox.csv"))
+  #write_csv(filled, glue("E:/c1/c1_vox/{c}_{p}_{res}m_vox.csv"))
+  write_csv(filled, glue("E:/c1/c1_vox/0dot1m/{c}_{p}_vox_0dot1m.csv"))
   tictoc::toc()
   rm(filled, vox_met, las)
   gc()
@@ -97,7 +98,7 @@ just_add <- everything %>%
   # distinct()
 
 #==============================================================
-#             add fire sev data, forest type, pre/post
+#           add fire sev data, forest type, pre/post
 #==============================================================
 
 
