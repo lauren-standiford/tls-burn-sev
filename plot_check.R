@@ -110,7 +110,6 @@ for (file_i in las_files) {
 library(rgl)
 
 las1 = readLAS("E:/c1/c1_tls_p1340_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
-#filter = '-drop_z_below 35'
 las2 = readLAS("E:/c5/c5_tls_p1340_reg2c1_200922_11dot3m.las", filter = '-keep_random_fraction 0.001')
 x = plot(las1, pal = "black", bg = "white")
 plot(las2, pal = "blue", bg = "white", add = x)
@@ -212,7 +211,50 @@ for (i in seq_len(nrow(df))) {
 #                     view sections of plots
 #==============================================================
 
-las1 = readLAS("E:/c6/c6_tls_p19_200817_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.001')
-las2 = readLAS("E:/c10/c10_tls_p19_reg2c6_220321_11dot3m_htnorm.las", filter = '-keep_random_fraction 0.001')
+las1 = readLAS("E:/c6/c6_tls_p19_200817_11dot3m_htnorm.las", filter = '-drop_z_below 35')
+las2 = readLAS("E:/c10/c10_tls_p19_reg2c6_220321_11dot3m_htnorm.las", filter = '-drop_z_below 35')
 x = plot(las1, pal = "red")
 plot(las2, pal = "blue", add = x)
+
+#==============================================================
+#            view how the heights change between scans
+#==============================================================
+
+files = tibble(
+  file_name = list.files(c("E:/c1/c1_vox","E:/c2/c2_vox","E:/c5/c5_vox", "E:/c6/c6_vox", "E:/c10/c10_vox"), 
+  full.names = TRUE , pattern = '\\.csv$')
+) %>%
+  mutate(
+    campaign = str_extract(file_name, "c\\d+"),
+    plot = str_extract(file_name, "p\\d{1,4}"),
+    res = str_extract(file_name, "\\d+\\.\\d+(?=m)"),
+    max_z = map_dbl(file_name, function(file_path) {
+      read_csv(file_path, show_col_types = FALSE) %>%
+        summarise(max_z = max(Z, na.rm = TRUE)) %>%
+        pull(max_z)
+    })
+  )
+
+files <- files %>%
+  mutate(
+    campaign_num = as.integer(str_remove(campaign, "c")),
+    campaign = factor(campaign, levels = unique(campaign[order(campaign_num)])),
+    plot = factor(plot)
+  ) %>%
+  arrange(plot, campaign_num) %>%
+  filter(res == "0.25")
+
+files <- files %>%
+  group_by(plot) %>%
+  filter(n_distinct(campaign) == n_distinct(files$campaign)) %>%
+  ungroup()
+
+p = ggplot(files, aes(x = campaign, y = max_z, group = plot, color = plot)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2) +
+  labs(x = "Campaign", y = "Max Z", color = "Plot", title = "Max Height Changes Between Campaigns, Res = 0.25m") +
+  theme_minimal()
+
+plot(p)
+
+ggsave("E:/max_z_changes_between_campaigns_res0dot25.png", plot = p)
