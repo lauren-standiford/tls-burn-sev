@@ -30,7 +30,7 @@ plot(vox_filtered2, color = "N2", pal = heat.colors, size = 0.5, bg = "white", v
 #            generate voxels and metrics by plot
 #==============================================================
 
-las_files <- list.files("E:/c5", full.names = TRUE, pattern = 'htnorm\\.las$')
+las_files <- list.files("E:/c6", full.names = TRUE, pattern = 'htnorm\\.las$')
 i = 1
 file_i = las_files[i]
 res_values = c(0.1, 0.25, 0.5)
@@ -55,7 +55,6 @@ for (file_i in las_files) {
     add_column(plot = p,
                campaign = c,
                res = res)
-  #write_csv(filled, glue("E:/c1/c1_vox/{c}_{p}_{res}m_vox.csv"))
   write_csv(filled, glue("E:/{c}/{c}_vox/{c}_{p}_vox_{res}m.csv"))
   tictoc::toc()
   rm(filled, vox_met, las)

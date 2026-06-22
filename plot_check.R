@@ -217,7 +217,7 @@ x = plot(las1, pal = "red")
 plot(las2, pal = "blue", add = x)
 
 #==============================================================
-#            view how the heights change between scans
+#         plot height change between campaigns (voxels)
 #==============================================================
 
 files = tibble(

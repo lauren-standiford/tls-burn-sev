@@ -1,0 +1,24 @@
+Field data processing
+
+# Libraries and data
+```{r}
+library(tidyverse)
+data <- read_csv("E:/PPW_field_data.csv")
+```
+
+# Post-Tubbs investigations
+```{r}
+# status by plot
+fates18 <- data |>
+    filter(!is.na(fate4.18),
+            DBH_cm.18 > 10) |>
+    count(Plot, Species, fate4.18, name = "n")
+view(fates18)
+
+# status by species
+fates_spp <- data |>
+    filter(!is.na(fate4.18),
+            DBH_cm.18 > 10) |>
+    count(Species, fate4.18, name = "n")
+view(fates_spp)
+```
