@@ -8,6 +8,7 @@ data <- read_csv("E:/PPW_field_data.csv")
 
 # Post-Tubbs investigations
 ```{r}
+
 # status by plot
 fates18 <- data |>
     filter(!is.na(fate4.18),
@@ -21,4 +22,31 @@ fates_spp <- data |>
             DBH_cm.18 > 10) |>
     count(Species, fate4.18, name = "n")
 view(fates_spp)
+```
+
+# BA
+```{r}
+ba <- data |>
+    select(Plot, Species, Num, Live.17, fate4.18, DBH_cm.17, DBH_cm.18, DBH_cm.19) |>
+    filter(!is.na(DBH_cm.17)) |>
+    mutate(ba_m2_17 = ((pi * (DBH_cm.17)^2) / 40000)) |>
+    group_by(Plot) |>
+    summarize(ba_m2_17 = sum(ba_m2_17))
+view(ba)
+
+
+```
+
+# DBH comparison
+```{r}
+data |>
+    filter(!is.na(DBH_cm.18), !is.na(DBH_cm.19)) |>
+    ggplot(aes(x = DBH_cm.18, y = DBH_cm.19)) +
+    geom_point(alpha = 0.6) +
+    geom_smooth(method = "lm", se = FALSE, color = "steelblue") +
+    labs(
+        x = "DBH cm 2018",
+        y = "DBH cm 2019",
+        title = "DBH comparison between 2018 and 2019"
+    )
 ```
