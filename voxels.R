@@ -90,15 +90,22 @@ files = tibble(
 #==============================================================
 
 
-cut <- read_csv("E:/cropped_z_vox_0dot25.csv") |>
+cut2 <- read_csv("E:/cropped_z_vox_0dot25v2.csv") |>
   group_by(plot, campaign) |>
-  filter(Z == 1) |>
-  ungroup() |>
-  mutate(max_z = map_dbl(file_name, function(file_path) {
+  filter(Z == 1) #|>
+  #ungroup() |>
+  #mutate(max_z = map_dbl(file_name, function(file_path) {
       read_csv(file_path, show_col_types = FALSE) %>%
         summarise(max_z = max(Z, na.rm = TRUE)) %>%
         pull(max_z)
   }))
+
+
+
+cut3 <- read_csv("E:/cropped_z_vox_0dot25v2.csv") %>%
+  group_by(file_name) %>%
+  mutate(max_z = summarise(max_z = max(Z, na.rm = TRUE)) #
+  #pull(max_z)
 
 p = ggplot(cut, aes(x = campaign, y = max_z, group = plot, color = plot)) +
   geom_line(linewidth = 0.8) +
@@ -134,11 +141,23 @@ all_vox_data <- files2 %>%
   mutate(data = map(file_name, ~ read_csv(.x, show_col_types = FALSE))) %>%
   select(file_name, data) %>%
   unnest(data) %>%
-  left_join(low_z %>% select(plot, max_z), by = "plot") %>%
-  filter(Z <= max_z) %>%
+  mutate(
+    plot = as.character(plot),
+    Z = as.numeric(Z)
+  ) %>%
+  left_join(
+    low_z %>%
+      select(plot, max_z) %>%
+      mutate(
+        plot = as.character(plot),
+        max_z = as.numeric(max_z)
+      ),
+    by = "plot"
+  ) %>%
+  filter(!is.na(max_z), Z <= max_z) %>%
   select(-max_z)
 
-write_csv(all_vox_data, "E:/cropped_z_vox_0dot25.csv")
+write_csv(all_vox_data, "E:/cropped_z_vox_0dot25v2.csv")
 
 #==============================================================
 #                 combine plot-level voxel data
