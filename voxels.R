@@ -30,7 +30,7 @@ plot(vox_filtered2, color = "N2", pal = heat.colors, size = 0.5, bg = "white", v
 #            generate voxels and metrics by plot
 #==============================================================
 
-las_files <- list.files("E:/c6", full.names = TRUE, pattern = 'htnorm\\.las$')
+las_files <- list.files("E:/c10", full.names = TRUE, pattern = 'htnorm\\.las$')
 i = 1
 file_i = las_files[i]
 res_values = c(0.1, 0.25, 0.5)
@@ -62,6 +62,83 @@ for (file_i in las_files) {
   }
   i = i + 1
 }
+
+#==============================================================
+#         plot height change between campaigns (voxels)
+#==============================================================
+
+files = tibble(
+  file_name = list.files(c("E:/c1/c1_vox","E:/c2/c2_vox","E:/c5/c5_vox", "E:/c6/c6_vox", "E:/c10/c10_vox"), 
+  full.names = TRUE , pattern = '\\.csv$')
+) %>%
+  mutate(
+    campaign = str_extract(file_name, "c\\d+"),
+    plot = str_extract(file_name, "p\\d{1,4}"),
+    res = str_extract(file_name, "\\d+\\.\\d+(?=m)"),
+    max_z = map_dbl(file_name, function(file_path) {
+      read_csv(file_path, show_col_types = FALSE) %>%
+        summarise(max_z = max(Z, na.rm = TRUE)) %>%
+        pull(max_z)
+    })) %>%
+  mutate(
+    campaign_num = as.integer(str_remove(campaign, "c")),
+    campaign = factor(campaign, levels = unique(campaign[order(campaign_num)])),
+    plot = factor(plot)
+  ) %>%
+  arrange(plot, campaign_num) %>%
+  filter(res == "0.25")
+#==============================================================
+
+
+cut <- read_csv("E:/cropped_z_vox_0dot25.csv") |>
+  group_by(plot, campaign) |>
+  filter(Z == 1) |>
+  ungroup() |>
+  mutate(max_z = map_dbl(file_name, function(file_path) {
+      read_csv(file_path, show_col_types = FALSE) %>%
+        summarise(max_z = max(Z, na.rm = TRUE)) %>%
+        pull(max_z)
+  }))
+
+p = ggplot(cut, aes(x = campaign, y = max_z, group = plot, color = plot)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2) +
+  labs(x = "Campaign", y = "Max Z", color = "Plot", title = "Max Height Changes Between Campaigns, Res = 0.1m") +
+  theme_minimal()
+
+plot(p)
+
+ggsave("E:/max_z_changes_between_campaigns_res0dot1.png", plot = p)
+
+#==============================================================
+#         cut heights to shortest campaign (voxels)
+#==============================================================
+
+low_z <- files %>%
+  group_by(plot) %>%
+  slice_min(max_z, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(plot, file_name, campaign, res, max_z) %>%
+  mutate(plot = as.character(plot))
+
+files2 = tibble(
+  file_name = list.files(c("E:/c1/c1_vox","E:/c2/c2_vox","E:/c5/c5_vox", "E:/c6/c6_vox", "E:/c10/c10_vox"), 
+  full.names = TRUE , pattern = '\\.csv$')) %>%
+  mutate(
+    campaign = str_extract(file_name, "c\\d+"),
+    plot = str_extract(file_name, "p\\d{1,4}"),
+    res = str_extract(file_name, "\\d+\\.\\d+(?=m)")) |>
+  filter(res == "0.25")
+
+all_vox_data <- files2 %>%
+  mutate(data = map(file_name, ~ read_csv(.x, show_col_types = FALSE))) %>%
+  select(file_name, data) %>%
+  unnest(data) %>%
+  left_join(low_z %>% select(plot, max_z), by = "plot") %>%
+  filter(Z <= max_z) %>%
+  select(-max_z)
+
+write_csv(all_vox_data, "E:/cropped_z_vox_0dot25.csv")
 
 #==============================================================
 #                 combine plot-level voxel data

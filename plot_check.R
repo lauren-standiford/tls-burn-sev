@@ -232,29 +232,21 @@ files = tibble(
       read_csv(file_path, show_col_types = FALSE) %>%
         summarise(max_z = max(Z, na.rm = TRUE)) %>%
         pull(max_z)
-    })
-  )
-
-files <- files %>%
+    })) %>%
   mutate(
     campaign_num = as.integer(str_remove(campaign, "c")),
     campaign = factor(campaign, levels = unique(campaign[order(campaign_num)])),
     plot = factor(plot)
   ) %>%
   arrange(plot, campaign_num) %>%
-  filter(res == "0.25")
-
-files <- files %>%
-  group_by(plot) %>%
-  filter(n_distinct(campaign) == n_distinct(files$campaign)) %>%
-  ungroup()
+  filter(res == "0.1")
 
 p = ggplot(files, aes(x = campaign, y = max_z, group = plot, color = plot)) +
   geom_line(linewidth = 0.8) +
   geom_point(size = 2) +
-  labs(x = "Campaign", y = "Max Z", color = "Plot", title = "Max Height Changes Between Campaigns, Res = 0.25m") +
+  labs(x = "Campaign", y = "Max Z", color = "Plot", title = "Max Height Changes Between Campaigns, Res = 0.1m") +
   theme_minimal()
 
 plot(p)
 
-ggsave("E:/max_z_changes_between_campaigns_res0dot25.png", plot = p)
+ggsave("E:/max_z_changes_between_campaigns_res0dot1.png", plot = p)
