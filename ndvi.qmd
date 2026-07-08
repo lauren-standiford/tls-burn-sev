@@ -4,6 +4,8 @@
 library(sf)
 library(xml2)
 library(tidyverse)
+
+scans <- c(1301, 1303, 1304, 1306, 1310, 1312, 1313, 1325, 1329, 1332, 1335, 1337, 1340, 1342, 1349, 1853, 1307, 1309, 1315, 1319, 1854, 1336)
 ```
 
 # Convert .kmz to a shapefile for use in GEE
@@ -69,18 +71,41 @@ st_write(plot_data, dsn = output_dir, layer = output_layer, driver = "ESRI Shape
 
 shp <- st_read(output_file, quiet = TRUE)
 names(shp)
+unique(shp$Plot)
 ```
 
-# 
+# Combine NDVI and field/MTBS data
 ```{r}
-ndvi <- read_csv("E:/ndvi/PPW_Landsat_NDVI_3.csv") |>
-	mutate(Plot = str_remove_all(Plot, "PPW"))
 forest <- read_csv("E:/plots_mtbs_veg.csv") |>
-    select(Plot, LF_FOREST) |>
+    select(Plot, LF_FOREST, RdNBR, RBR) |>
     mutate(Plot = str_remove_all(Plot, "p"))
+ndvi <- read_csv("E:/ndvi/PPW_Landsat_NDVI_4.csv") |>
+    select("system:index", Plot, date) |>
+	mutate(Plot = str_remove_all(Plot, "PPW")) |>
+	#filter(!str_starts(Plot, "15")) |>
+	left_join(forest, by = "Plot") |>
+    filter(!is.na(LF_FOREST),
+    Plot %in% scans)
 
-ndvi <- ndvi |>
-	left_join(forest, by = "Plot")
+unique(ndvi$Plot)
 view(ndvi)
+ndvi <- read_csv("E:/ndvi/PPW_Landsat_NDVI_9.csv")
+
+
+ndvi3 <- read_csv("E:/ndvi/PPW_Landsat_NDVI_3.csv")
+unique(ndvi3$Plot) == unique(ndvi$Plot)
+
+ |>
+	filter(Plot == "PPW1307")
+view(ndvi3)
+summary(ndvi3)
+
+ndvi9 <- read_csv("E:/ndvi/PPW_Landsat_NDVI_9.csv") |>
+	filter(Plot == "PPW1307")
+view(ndvi9)
+summary(ndvi9)
+
+mean(ndvi3$NDVI)
+mean(ndvi8$NDVI)
 
 ```
