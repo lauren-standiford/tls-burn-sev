@@ -2,9 +2,11 @@
 
 ```{r}
 library(sf)
+library(xml2)
+library(tidyverse)
 ```
 
-# Convert PPW .kmz to a geojson for use in GEE
+# Convert .kmz to a shapefile for use in GEE
 ```{r}
 # 1. Set your KMZ file path
 kmz_filename <- "E://PepperwoodPlotLocations//PepperwoodPlotLocations//2021_plot_locations.kmz"
@@ -12,7 +14,9 @@ kmz_filename <- "E://PepperwoodPlotLocations//PepperwoodPlotLocations//2021_plot
 # 2. Define temporary unzip directory and output name (in same folder as KMZ)
 kmz_folder <- dirname(kmz_filename)
 unzip_dir <- "extracted_kml_temp"
-output_geojson <- file.path(kmz_folder, "ppw_plots.geojson")
+output_dir <- kmz_folder
+output_layer <- "ppw_plots"
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
 # 3. R automatically unzips the KMZ to extract the KML data
 unzip(kmz_filename, exdir = unzip_dir)
@@ -20,14 +24,63 @@ unzip(kmz_filename, exdir = unzip_dir)
 # 4. R finds the newly extracted .kml file automatically
 kml_file <- list.files(unzip_dir, pattern = "\\.kml$", full.names = TRUE)
 
-# 5. Check available layers in the KML file
-layers <- st_layers(kml_file)
-print(layers)
+# 5. Parse the KML directly so every SimpleData field is preserved
+kml_doc <- read_xml(kml_file[1])
+kml_ns <- xml_ns(kml_doc)
+placemarks <- xml_find_all(kml_doc, ".//kml:Placemark", kml_ns)
 
-# 6. Read the data into R (specify the layer you want)
-# Using the first layer, or change to a specific layer name if needed
-plot_data <- st_read(kml_file, layer = layers$name[1])
+parse_placemark <- function(placemark) {
+	simple_data <- xml_find_all(placemark, ".//kml:ExtendedData//kml:SimpleData", kml_ns)
+	values <- xml_text(simple_data)
+	names(values) <- xml_attr(simple_data, "name")
 
-# 7. Convert to GeoJSON and export (keeps 3D coordinates)
-st_write(plot_data, dsn = output_geojson, driver = "GeoJSON")
+	coords_text <- xml_text(xml_find_first(
+		placemark,
+		".//kml:Polygon//kml:outerBoundaryIs//kml:LinearRing//kml:coordinates",
+		kml_ns
+	))
+	coords <- trimws(strsplit(coords_text, "\\s+")[[1]])
+	coords <- do.call(rbind, strsplit(coords, ","))
+	coords <- matrix(as.numeric(coords[, 1:2, drop = FALSE]), ncol = 2)
+
+	list(
+		data = as.data.frame(as.list(values), stringsAsFactors = FALSE),
+		geometry = st_polygon(list(coords))
+	)
+}
+
+parsed <- lapply(placemarks, parse_placemark)
+all_fields <- unique(unlist(lapply(parsed, function(x) names(x$data))))
+attr_rows <- lapply(parsed, function(x) {
+	missing_fields <- setdiff(all_fields, names(x$data))
+	for (field_name in missing_fields) {
+		x$data[[field_name]] <- NA
+	}
+	x$data[all_fields]
+})
+plot_data <- st_sf(
+	type.convert(do.call(rbind, attr_rows), as.is = TRUE),
+	geometry = st_sfc(lapply(parsed, `[[`, "geometry"), crs = 4326)
+)
+
+# 6. Export the preserved attributes and geometry as a shapefile
+output_file <- file.path(output_dir, paste0(output_layer, ".shp"))
+st_write(plot_data, dsn = output_dir, layer = output_layer, driver = "ESRI Shapefile", delete_layer = TRUE)
+
+shp <- st_read(output_file, quiet = TRUE)
+names(shp)
+```
+
+# 
+```{r}
+ndvi <- read_csv("E:/ndvi/PPW_Landsat_NDVI_3.csv") |>
+	mutate(Plot = str_remove_all(Plot, "PPW"))
+forest <- read_csv("E:/plots_mtbs_veg.csv") |>
+    select(Plot, LF_FOREST) |>
+    mutate(Plot = str_remove_all(Plot, "p"))
+
+ndvi <- ndvi |>
+	left_join(forest, by = "Plot")
+view(ndvi)
+
 ```
