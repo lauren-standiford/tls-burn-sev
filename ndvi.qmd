@@ -1,0 +1,33 @@
+# NDVI
+
+```{r}
+library(sf)
+```
+
+# Convert PPW .kmz to a geojson for use in GEE
+```{r}
+# 1. Set your KMZ file path
+kmz_filename <- "E://PepperwoodPlotLocations//PepperwoodPlotLocations//2021_plot_locations.kmz"
+
+# 2. Define temporary unzip directory and output name (in same folder as KMZ)
+kmz_folder <- dirname(kmz_filename)
+unzip_dir <- "extracted_kml_temp"
+output_geojson <- file.path(kmz_folder, "ppw_plots.geojson")
+
+# 3. R automatically unzips the KMZ to extract the KML data
+unzip(kmz_filename, exdir = unzip_dir)
+
+# 4. R finds the newly extracted .kml file automatically
+kml_file <- list.files(unzip_dir, pattern = "\\.kml$", full.names = TRUE)
+
+# 5. Check available layers in the KML file
+layers <- st_layers(kml_file)
+print(layers)
+
+# 6. Read the data into R (specify the layer you want)
+# Using the first layer, or change to a specific layer name if needed
+plot_data <- st_read(kml_file, layer = layers$name[1])
+
+# 7. Convert to GeoJSON and export (keeps 3D coordinates)
+st_write(plot_data, dsn = output_geojson, driver = "GeoJSON")
+```
