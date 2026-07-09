@@ -1,15 +1,15 @@
-# NDVI
-
-```{r}
+#
+#
+#
 library(sf)
 library(xml2)
 library(tidyverse)
 
 scans <- c(1301, 1303, 1304, 1306, 1310, 1312, 1313, 1325, 1329, 1332, 1335, 1337, 1340, 1342, 1349, 1853, 1307, 1309, 1315, 1319, 1854, 1336)
-```
-
-# Convert .kmz to a shapefile for use in GEE
-```{r}
+#
+#
+#
+#
 # 1. Set your KMZ file path
 kmz_filename <- "E://PepperwoodPlotLocations//PepperwoodPlotLocations//2021_plot_locations.kmz"
 
@@ -72,58 +72,26 @@ st_write(plot_data, dsn = output_dir, layer = output_layer, driver = "ESRI Shape
 shp <- st_read(output_file, quiet = TRUE)
 names(shp)
 unique(shp$Plot)
-```
-
-# Combine NDVI and field/MTBS data
-```{r}
+#
+#
+#
+#
 forest <- read_csv("E:/plots_mtbs_veg.csv") |>
     select(Plot, LF_FOREST, RdNBR, RBR) |>
-    mutate(Plot = str_remove_all(Plot, "p")) |>
-	filter(!is.na(LF_FOREST)) |>
-	mutate(sev_class = case_when(
-    RBR < 130 ~ 'Low',
-    RBR >= 130 & RBR < 298 ~ 'Moderate',
-    RBR >= 298 ~ 'High'))
-
-
-ndvi <- read_csv("E:/ndvi/PPW_Landsat_NDVI_9.csv") |>
-    select("system:index", Plot, date, NDVI) |>
+    mutate(Plot = str_remove_all(Plot, "p"))
+ndvi <- read_csv("E:/ndvi/PPW_Landsat_NDVI_4.csv") |>
+    select("system:index", Plot, date) |>
 	mutate(Plot = str_remove_all(Plot, "PPW")) |>
 	#filter(!str_starts(Plot, "15")) |>
 	left_join(forest, by = "Plot") |>
-	filter(Plot %in% scans) |>
-	mutate(sev_class = case_when(
-    RBR < 130 ~ 'Low',
-    RBR >= 130 & RBR < 298 ~ 'Moderate',
-    RBR >= 298 ~ 'High'))
+    filter(!is.na(LF_FOREST),
+    Plot %in% scans)
 
 unique(ndvi$Plot)
 view(ndvi)
-```
-
-# plot
-```{r}
-ndvi_summary <- ndvi |>
-	group_by(date, LF_FOREST) |>
-	summarise(NDVI = mean(NDVI, na.rm = TRUE), .groups = "drop")
-
-p <- ggplot(ndvi_summary, aes(x = date, y = NDVI, color = LF_FOREST, group = LF_FOREST)) +
-	geom_line(linewidth = 1) +
-	labs(
-		x = "Date",
-		y = "NDVI",
-		color = "LF_FOREST"
-	) +
-	theme_minimal()
-
-ggsave(p, filename = "E:/ndvi/ndvi_plot1.png", width = 8, height = 6, dpi = 300)
-
-```
+ndvi <- read_csv("E:/ndvi/PPW_Landsat_NDVI_9.csv")
 
 
-
-# problemsolving
-```{r}
 ndvi3 <- read_csv("E:/ndvi/PPW_Landsat_NDVI_3.csv")
 unique(ndvi3$Plot) == unique(ndvi$Plot)
 
@@ -139,4 +107,7 @@ summary(ndvi9)
 
 mean(ndvi3$NDVI)
 mean(ndvi8$NDVI)
-```
+
+#
+#
+#
