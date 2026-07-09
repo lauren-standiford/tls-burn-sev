@@ -84,18 +84,14 @@ forest <- read_csv("E:/plots_mtbs_veg.csv") |>
     RBR < 130 ~ 'Low',
     RBR >= 130 & RBR < 298 ~ 'Moderate',
     RBR >= 298 ~ 'High'))
+view(forest)
 
-
-ndvi <- read_csv("E:/ndvi/PPW_Landsat_NDVI_9.csv") |>
+ndvi <- read_csv("E:/ndvi/Landsat_NDVI_Extraction_3years.csv") |>
     select("system:index", Plot, date, NDVI) |>
 	mutate(Plot = str_remove_all(Plot, "PPW")) |>
 	#filter(!str_starts(Plot, "15")) |>
 	left_join(forest, by = "Plot") |>
-	filter(Plot %in% scans) |>
-	mutate(sev_class = case_when(
-    RBR < 130 ~ 'Low',
-    RBR >= 130 & RBR < 298 ~ 'Moderate',
-    RBR >= 298 ~ 'High'))
+	filter(Plot %in% scans)
 
 unique(ndvi$Plot)
 view(ndvi)
@@ -108,15 +104,55 @@ ndvi_summary <- ndvi |>
 	summarise(NDVI = mean(NDVI, na.rm = TRUE), .groups = "drop")
 
 p <- ggplot(ndvi_summary, aes(x = date, y = NDVI, color = LF_FOREST, group = LF_FOREST)) +
-	geom_line(linewidth = 1) +
+	geom_smooth(linewidth = 1, method = "loess", span = 0.1) +
+	geom_point(size = 0.5) +
+	geom_vline(xintercept = as.Date("2017-10-08"), linetype = "dashed", color = "black") +
+	annotate(
+		"text",
+		x = as.Date("2017-10-08"),
+		y = max(ndvi_summary$NDVI, na.rm = TRUE),
+		label = "Tubbs ignited",
+		angle = 90,
+		vjust = -0.5,
+		hjust = 0.5,
+		size = 3,
+		color = "black"
+	) +
+	geom_vline(xintercept = as.Date("2018-02-09"), linetype = "dashed", color = "black") +
+	annotate(
+		"text",
+		x = as.Date("2018-02-09"),
+		y = max(ndvi_summary$NDVI, na.rm = TRUE),
+		label = "Tubbs contained",
+		angle = 90,
+		vjust = -0.5,
+		hjust = 0.5,
+		size = 3,
+		color = "black"
+	) +
+	geom_vline(xintercept = as.Date("2019-10-23"), linetype = "dashed", color = "black") +
+	annotate(
+		"text",
+		x = as.Date("2019-10-23"),
+		y = max(ndvi_summary$NDVI, na.rm = TRUE),
+		label = "Kincade ignited",
+		angle = 90,
+		vjust = -0.5,
+		hjust = 0.5,
+		size = 3,
+		color = "black"
+	) +
 	labs(
 		x = "Date",
 		y = "NDVI",
-		color = "LF_FOREST"
+		color = "LF_FOREST",
+		title = "NDVI from 3 years pre-Tubbs ignition to 3 years post-Tubbs containment",
 	) +
 	theme_minimal()
 
-ggsave(p, filename = "E:/ndvi/ndvi_plot1.png", width = 8, height = 6, dpi = 300)
+p
+
+ggsave(p, filename = "E:/ndvi/ndvi_plot3years2.png", width = 8, height = 8, dpi = 300)
 
 ```
 
