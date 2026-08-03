@@ -65,9 +65,8 @@ df[104, "quality"] <- 1
 #                         update CRS
 #==============================================================
 
-las_files <- list.files("E:/c5", full.names = TRUE, pattern = "2\\.las$")
-
-i = 1
+las_files <- list.files("E:/c1/new", full.names = TRUE, pattern = "\\.las$")
+i = 6
 file_i = las_files[i]
 
 for (file_i in las_files) {
@@ -84,7 +83,7 @@ for (file_i in las_files) {
 
 ######################### check crs status ####################
 
-las_files <- list.files("E:/c5", full.names = TRUE, pattern = "2\\.las$")
+las_files <- list.files("E:/c1/new", full.names = TRUE, pattern = "\\.las$")
 las_files
 #las_ref <- readLAS("E:/c2/c2_tls_p1301_200327_reg2c1.las", filter = '-keep_random_fraction 0.0001')
 #st_crs(las_ref)
@@ -97,9 +96,8 @@ for (file_i in las_files) {
   message(i, ' of ', length(las_files))
   las = readLAS(file_i, filter = '-keep_random_fraction 0.000001')
   #message("CRS for ", file_i, ": ", st_crs(las))
-  message("EPSG:26910 ", st_crs(las) == st_crs("EPSG:26910"))
+  message(file_i, ": ", st_crs(las) == st_crs("EPSG:26910"))
   #message("manual input ", st_crs(las) == st_crs(las_ref))
-  
   i = i + 1
 }
 
@@ -111,12 +109,19 @@ library(rgl)
 
 las1 = readLAS("E:/c1/c1_tls_p1340_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
 las2 = readLAS("E:/c5/c5_tls_p1340_reg2c1_200922_11dot3m.las", filter = '-keep_random_fraction 0.001')
-x = plot(las1, pal = "black", bg = "white")
+x = plot(las1, pal = "red", bg = "white")
 plot(las2, pal = "blue", bg = "white", add = x)
 
-st_crs(las2) == st_crs(las1)
+###
 
-writeLAS(las1, "E:/c1/c1_p1340_for_phone.las")
+files <- list.files("E:/c1/new", full.names = TRUE, pattern = '3m\\.las$')
+files
+i = 1
+file_i = files[i]
+file_i
+las = readLAS(file_i, filter = '-keep_random_fraction 0.001')
+plot(las)
+i = i + 1
 
 #==============================================================
 #                calculate plot centers & radius
@@ -130,15 +135,14 @@ df = tibble(
   x_center = c(1),
   y_center = c(1),
 )
-
-df$file_name <- as.character(df$c1_file_name)
+df$file_name <- as.character(df$file_name)
 df$campaign <- as.character(df$campaign)
 df$plot <- as.character(df$plot)
 
-files <- list.files("E:/c1", full.names = TRUE, pattern = '\\.las$')
-i = 6
+files <- list.files("E:/c1/new", full.names = TRUE, pattern = '\\.las$')
+files
+i = 1
 file_i = files[i]
-file_i
 
 for (file_i in files) {
   message('Processing ', file_i)
@@ -146,17 +150,15 @@ for (file_i in files) {
   las = readLASheader(file_i)
   x = st_bbox(las)
   r = ((x$xmax - x$xmin)/2)
-  
   df = df %>%
     add_row(
-      c1_file_name = file_i,
+      file_name = file_i,
       campaign = str_extract(file_i, "c\\d+"),
       plot = str_match(file_i, "p(\\d+)")[,2],
       radius = r,
       x_center = (x$xmin + r),
       y_center = (x$ymin + r)
     )
-  
   i = i + 1
 }
 
@@ -164,7 +166,7 @@ df$x_center <- as.numeric(df$x_center)
 df$y_center <- as.numeric(df$y_center)
 df$radius <- as.numeric(df$radius)
 
-write_csv(df, "E:/c1/c1_centers_c1c2c5names.csv")
+write_csv(df, "E:/c1/c1_centers_v2.csv")
 df = read_csv("E:/c1/c1_centers_c1c2c5names.csv")
 df <- df[-c(1, 2), ]
 
@@ -182,29 +184,25 @@ df <- df %>%
 #                         clip radius
 #==============================================================
 
-df = read_csv("E:/c1/c1_centers_c1c2c5names.csv")
+df = read_csv("E:/c1/c1_centers_v2.csv")
 
-i = 2
-file_i = df$c2_file_name[i]
+i = 1
+file_i = df$file_name[i]
 file_i
 
 for (i in seq_len(nrow(df))) {
-  file_i = df$c2_file_name[i]
-  
+  file_i = df$file_name[i]
   message('Processing ', file_i)
   message(i, ' of ', nrow(df))
   tictoc::tic()
-  
   las = readLAS(file_i)
   x_center = df$x_center[i]
   y_center = df$y_center[i]
   new_radius = df$radius[i]
   las = clip_circle(las = las, xcenter = x_center, ycenter = y_center, radius = new_radius)
-  
   new_file_name <- str_replace(file_i, "\\.las$", "_11dot3m\\.las")
   writeLAS(las, new_file_name)
   tictoc::toc()
-  
   i = i + 1
 }
 #==============================================================

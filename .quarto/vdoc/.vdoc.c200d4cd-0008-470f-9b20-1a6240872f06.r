@@ -1,15 +1,15 @@
-# NDVI
-
-```{r}
+#
+#
+#
 library(sf)
 library(xml2)
 library(tidyverse)
 
 scans <- c(1301, 1303, 1304, 1306, 1310, 1312, 1313, 1325, 1329, 1332, 1335, 1337, 1340, 1342, 1349, 1853, 1307, 1309, 1315, 1319, 1854, 1336)
-```
-
-# Convert .kmz to a shapefile for use in GEE
-```{r}
+#
+#
+#
+#
 # 1. Set your KMZ file path
 kmz_filename <- "E://PepperwoodPlotLocations//PepperwoodPlotLocations//2021_plot_locations.kmz"
 
@@ -72,10 +72,10 @@ st_write(plot_data, dsn = output_dir, layer = output_layer, driver = "ESRI Shape
 shp <- st_read(output_file, quiet = TRUE)
 names(shp)
 unique(shp$Plot)
-```
-
-# Combine NDVI and field/MTBS data
-```{r}
+#
+#
+#
+#
 forest <- read_csv("E:/plots_mtbs_veg.csv") |>
     select(Plot, LF_FOREST, RdNBR, RBR) |>
     mutate(Plot = str_remove_all(Plot, "p")) |>
@@ -95,33 +95,29 @@ ndvi <- read_csv("E:/ndvi/PPW_Landsat_NDVI_2014tonow.csv") |>
 
 unique(ndvi$Plot)
 view(ndvi)
-```
-
-# plot
-```{r}
+#
+#
+#
+#
 ndvi_summary <- ndvi |>
 	group_by(date, LF_FOREST) |>
 	summarise(NDVI = mean(NDVI, na.rm = TRUE), .groups = "drop")
 
-	p <- ggplot(ndvi_summary, aes(x = date, y = NDVI, color = LF_FOREST, group = LF_FOREST)) +
+p <- ggplot(ndvi_summary, aes(x = date, y = NDVI, color = LF_FOREST, group = LF_FOREST)) +
 	geom_smooth(linewidth = 1, method = "loess", span = 0.1) +
-	geom_point(size = 0.6) +
-	scale_y_continuous(limits = c(0.25,1), expand = c(0, 0)) +
-	scale_x_date(
-  date_breaks = "1 year",
-  date_labels = "%Y",
-  limits = range(ndvi_summary$date, na.rm = TRUE),
-  expand = c(0, 0)) +
+	geom_point(size = 0.5) +
+	scale_y_continuous(limits = c(0.2,1)) +
+	scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
 	geom_vline(xintercept = as.Date("2017-10-08"), linetype = "dashed", color = "black") +
 	annotate(
 		"text",
 		x = as.Date("2017-10-08"),
-		y = 0.27,
-		label = "Tubbs fire",
+		y = max(ndvi_summary$NDVI, na.rm = TRUE),
+		label = "Tubbs ignited",
 		angle = 90,
-		vjust = -0.6,
+		vjust = -0.5,
 		hjust = -0.2,
-		size = 9,
+		size = 3,
 		color = "black"
 	) +
 	geom_vline(xintercept = as.Date("2018-02-09"), linetype = "dashed", color = "black") +
@@ -129,23 +125,23 @@ ndvi_summary <- ndvi |>
 		"text",
 		x = as.Date("2018-02-09"),
 		y = max(ndvi_summary$NDVI, na.rm = TRUE),
-		label = NA,
+		label = "Tubbs contained",
 		angle = 90,
 		vjust = -0.5,
 		hjust = 0,
-		size = 6,
+		size = 3,
 		color = "black"
 	) +
 	geom_vline(xintercept = as.Date("2019-10-23"), linetype = "dashed", color = "black") +
 	annotate(
 		"text",
 		x = as.Date("2019-10-23"),
-		y = 0.27,
+		y = max(ndvi_summary$NDVI, na.rm = TRUE),
 		label = "Kincade fire",
 		angle = 90,
-		vjust = -0.6,
-		hjust = -0.2,
-		size = 9,
+		vjust = -0.5,
+		hjust = -0.4,
+		size = 3,
 		color = "black"
 	) +
 	geom_vline(xintercept = as.Date("2019-11-06"), linetype = "dashed", color = "black") +
@@ -157,38 +153,27 @@ ndvi_summary <- ndvi |>
 		angle = 90,
 		vjust = -0.5,
 		hjust = 0.5,
-		size = 6,
+		size = 3,
 		color = "black"
 	) +
 	labs(
 		x = "Date",
-		y = "Forest Recovery (NDVI)",
-		color = "Forest Type"
+		y = "NDVI",
+		color = "LF_FOREST",
+		title = "NDVI from 2014 to present for Pepperwood plots",
 	) +
-	theme_minimal(base_size = 24) +
-	theme(
-    text = element_text(size = 24),
-    legend.position = c(0.98, 0.08),
-	legend.justification = c(1, 0),
-	legend.background = element_rect(fill = "white", color = "black"),
-	legend.title = element_text(size = 26),
-	legend.text = element_text(size = 26),
-	axis.text.x = element_text(size = 26),
-	axis.text.y = element_text(size = 26),
-	axis.title.x = element_text(size = 26),
-	axis.title.y = element_text(size = 26),
-	panel.grid.minor = element_blank()
-  )
+	theme_minimal()
+
 p
 
-ggsave(p, filename = "E:/ndvi/ndvi_concept_2.png", width = 14, height = 10, dpi = 300)
+ggsave(p, filename = "E:/ndvi/ndvi_2014_to_now.png", width = 12, height = 8, dpi = 300)
 
-```
-
-
-
-# problemsolving
-```{r}
+#
+#
+#
+#
+#
+#
 ndvi3 <- read_csv("E:/ndvi/PPW_Landsat_NDVI_3.csv")
 unique(ndvi3$Plot) == unique(ndvi$Plot)
 
@@ -204,4 +189,6 @@ summary(ndvi9)
 
 mean(ndvi3$NDVI)
 mean(ndvi8$NDVI)
-```
+#
+#
+#
