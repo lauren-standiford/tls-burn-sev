@@ -163,39 +163,22 @@ write_csv(all_vox_data, "E:/cropped_z_vox_0dot25v2.csv")
 #                 combine plot-level voxel data
 #==============================================================
 
-all_plots <- list.files("E:/c1/c1_vox/0dot5m", full.names = TRUE) %>%
+new_campaign <- list.files("E:/c10/c10_vox", full.names = TRUE) %>%
   lapply(read_csv) %>%
   bind_rows()
-write_csv(all_plots, "E:/c1_vox/0dot5m/c1_vox_0dot5m.csv")
+prev_data <- read_csv("E:/voxel_data.csv")
+combine <- bind_rows(prev_data, new_campaign)
+write_csv(combine, "E:/voxel_data.csv")
 
-c1_vox <- read_csv("E:/c1c2_voxel_results/c1_0dot25/c1_vox_data_res0dot25.csv")
-c2_vox <- read_csv("E:/c1c2_voxel_results/c2_0dot25/c2_vox_data_res0dot25.csv")
-prepost_vox_data <- rbind(c1_vox, c2_vox)
-write_csv(prepost_vox_data, "E:/c1c2_voxel_results/c1c2_vox_data_res0dot25.csv")
 
-one_res <- read_csv("E:/c1c2_voxel_results/c1_0dot25/c1_vox_data_res0dot25.csv")
-
-one_res <- one_res %>%
-  filter(res == 0.05,
-         Z >= 0)
-
-new_df <- one_res %>%
-  left_join(
-    one_res,
-    just_add,
-    by = c("plot", "campaign"),
-    relationship = "many-to-many"
-  )
-  
-
-just_add <- everything %>%
-  select(plot, campaign, RBR_NN, RBR_3x3avg, prepost, LF_FOREST, sev_class)
-  # distinct()
 
 #==============================================================
 #           add fire sev data, forest type, pre/post
 #==============================================================
 
+just_add <- everything %>%
+  select(plot, campaign, RBR_NN, RBR_3x3avg, prepost, LF_FOREST, sev_class)
+  # distinct()
 
 #==============================================================
 #                        add fire sev data
