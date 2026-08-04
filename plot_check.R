@@ -1,5 +1,6 @@
 library(tidyverse)
 library(lidR)
+library(rgl)
 
 #==============================================================
 #             view las files and add to QC df
@@ -81,7 +82,7 @@ for (file_i in las_files) {
   i = i + 1
 }
 
-######################### check crs status ####################
+# check crs status
 
 las_files <- list.files("E:/c1/new", full.names = TRUE, pattern = "\\.las$")
 las_files
@@ -101,11 +102,30 @@ for (file_i in las_files) {
   i = i + 1
 }
 
+
 #==============================================================
-#                     plot pre/post together
+#              visualize ground classified points
 #==============================================================
 
-library(rgl)
+files <- list.files("E:/c1/new", full.names = TRUE, pattern = 'ground\\.las$')
+files
+i = 1
+file_i = files[i]
+file_i
+las = readLAS(file_i)
+ground <- filter_poi(las, Classification == 2)
+plot(ground, pal = "red", bg = "white")
+
+
+x <- plot(las, pal = "blue", bg = "white")
+
+x = plot(las$Classification == 2, pal = "red", bg = "white")
+plot(las, pal = "blue", bg = "white", add = x)
+i = i + 1
+
+#==============================================================
+#             visualize pre/post fire scans together
+#==============================================================
 
 las1 = readLAS("E:/c1/c1_tls_p1340_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
 las2 = readLAS("E:/c5/c5_tls_p1340_reg2c1_200922_11dot3m.las", filter = '-keep_random_fraction 0.001')

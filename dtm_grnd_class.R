@@ -5,7 +5,7 @@ library(stringr)
 #        generate dtms & height normalize initial scans
 #==============================================================
 
-files <- list.files("E:/c1", full.names = TRUE, pattern = '3m\\.las$')
+files <- list.files("E:/c1/new", full.names = TRUE, pattern = '3m\\.las$')
 i = 1
 file_i = files[i]
 
@@ -14,6 +14,21 @@ for (file_i in files) {
   message(i, ' of ', length(files))
   tictoc::tic()
   las <- readLAS(file_i)
+
+  # classify ground points using CSF
+  las <- classify_ground(las, algorithm = csf(
+    cloth_resolution = 0.5,
+    rigidness = 1L,
+    class_threshold = 0.1,
+    iterations = 500
+  ))
+
+  ground_points <- sum(las$Classification == 2, na.rm = TRUE)
+  message('Ground classified points: ', ground_points)
+  if (ground_points == 0) {
+    warning('Skipping ', file_i, ' because no ground classified points were found.')
+    next
+  }
   dtm <- rasterize_terrain(las, res = 0.25, algorithm = tin())
   dtm_file_name <- str_replace(file_i, "\\.las$", "_dtm.tif")
   terra::writeRaster(dtm, dtm_file_name, overwrite = TRUE)
@@ -45,7 +60,8 @@ file_info <- data.frame(
 
 dtm_files <- subset(file_info, type == ".tif")
 las_files <- subset(file_info, type == ".las")
-matched <- merge(dtm_files, las_files, by = "plot", suffixes = c(".tif", ".las"))
+matched <- merge(dtm_files, las_files, by = "plot", suffixes = c(".tif", ".las")
+)
 
 #subset of plots by row
 #plot_rows <- c(2, 3, 5, 6, 7, 10, 11)
