@@ -107,7 +107,7 @@ for (file_i in las_files) {
 #              visualize ground classified points
 #==============================================================
 
-files <- list.files("E:/c1/new", full.names = TRUE, pattern = 'ground\\.las$')
+files <- list.files("E:/c1/new", full.names = TRUE, pattern = 'ground3\\.las$')
 files
 i = 1
 file_i = files[i]
@@ -115,12 +115,13 @@ file_i
 las = readLAS(file_i)
 ground <- filter_poi(las, Classification == 2)
 plot(ground, pal = "red", bg = "white")
+i = i + 1
 
-
-x <- plot(las, pal = "blue", bg = "white")
-
-x = plot(las$Classification == 2, pal = "red", bg = "white")
-plot(las, pal = "blue", bg = "white", add = x)
+las = readLAS(file_i, filter = '-keep_random_fraction 0.001')
+ground <- filter_poi(las, Classification == 2)
+rest <- filter_poi(las, Classification != 2)
+x <- plot(rest, pal = "blue", bg = "white")
+plot(ground, pal = "red", bg = "white", add = x)
 i = i + 1
 
 #==============================================================

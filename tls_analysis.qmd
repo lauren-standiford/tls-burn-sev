@@ -1,0 +1,121 @@
+# Setup
+```{r}
+library(tidyverse)
+data <- read_csv("E:/voxel_data.csv")
+```
+
+# Poking around with stuff
+## Fire severity 
+```{r, number of plots in each severity class/forest type}
+data |> 
+  group_by(LF_FOREST, sev_class) |>
+  summarise(n_plots = n_distinct(plot), .groups = "drop") |>
+  mutate(sev_class = fct_relevel(sev_class, 'Low', 'Moderate', 'High')) |>
+  arrange(LF_FOREST, sev_class)
+```
+
+```{r, scatterplot of RBR}
+data |>
+    group_by(LF_FOREST, sev_class) |>
+    ggplot(aes(x = LF_FOREST, y = RBR, color = sev_class)) +
+    geom_point(size = 3) +
+    scale_color_manual(values = c("Low" = "green", "Moderate" = "orange", "High" = "red")) +
+    labs(x = "Forest Type", y = "RBR", color = "Severity Class") +
+    theme_minimal()
+```
+
+## Volume
+```{r, bar chart total volume by campaign}
+data |>
+    filter(campaign %in% c("c1", "c5", "c6", "c10")) |>
+    mutate(site = case_when(
+      campaign %in% c("c1", "c5") ~ "pepperwood",
+      campaign %in% c("c6", "c10") ~ "saddle mtn"
+    )) |>
+    group_by(site, campaign) |>
+    summarise(total_volume = sum(percentage, na.rm = TRUE), .groups = "drop") |>
+    ggplot(aes(x = site, y = total_volume, fill = campaign)) +
+    geom_col(width = 0.7, position = position_dodge(width = 0.8)) +
+    labs(x = "Site", y = "Volume", fill = "Campaign") +
+    theme_minimal()
+```
+
+```{r, bar chart total volume by campaign and severity class}
+data |>
+    filter(campaign %in% c("c1", "c5", "c6", "c10")) |>
+    mutate(site = case_when(
+      campaign %in% c("c1", "c5") ~ "pepperwood",
+      campaign %in% c("c6", "c10") ~ "saddle mtn"
+    )) |>
+    group_by(sev_class, site, campaign) |>
+    summarise(total_volume = sum(percentage, na.rm = TRUE), .groups = "drop") |>
+    ggplot(aes(x = site, y = total_volume, fill = campaign)) +
+    geom_col(width = 0.7, position = position_dodge(width = 0.8)) +
+    facet_wrap(~ sev_class) +
+    labs(x = "Site", y = "Volume", fill = "Campaign") +
+    theme_minimal()
+```
+
+```{r, volume summary stats by campaign sev and forest type}
+data |>
+    filter(campaign %in% c("c1", "c5", "c6", "c10")) |>
+    group_by(plot, campaign, sev_class, LF_FOREST) |>
+    summarise(total_volume = sum(percentage, na.rm = TRUE), .groups = "drop") |>
+    group_by(campaign, sev_class, LF_FOREST) |>
+    summarise(
+      n_plots = n(),
+      mean_volume = mean(total_volume, na.rm = TRUE),
+      median_volume = median(total_volume, na.rm = TRUE),
+      sd_volume = sd(total_volume, na.rm = TRUE),
+      q1_volume = quantile(total_volume, 0.25, na.rm = TRUE),
+      q3_volume = quantile(total_volume, 0.75, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    arrange(campaign, sev_class, LF_FOREST)
+```
+
+
+```{r}
+data |>
+    filter(Z >= 0, res == 0.5, campaign %in% c("c1", "c2", "c6", "c10")) |>
+    mutate(prepost = case_when(
+        campaign %in% c("c1", "c6") ~ "pre",
+        campaign %in% c("c2", "c10") ~ "post")) |>
+    mutate(
+      Z_group = cut(
+        Z,
+        breaks = seq(0, max(Z, na.rm = TRUE) + 5, by = 5),
+        right = FALSE,
+        include.lowest = TRUE
+      )
+    ) |>
+    group_by(Z_group, prepost, sev_class) |>
+    summarise(
+      mean_percentage = mean(percentage, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    ggplot(aes(x = mean_percentage, y = Z_group, color = prepost, shape = prepost)) +
+    geom_point(size = 2, position = position_dodge(width = 0.4)) +
+    facet_wrap(~ sev_class) +
+    labs(
+      x = "Mean percentage",
+      y = "Z group (5 m bins)",
+      color = "Pre/Post"
+    )
+
+
+```
+
+## Experiment with voxel sizes
+```{r}
+data |>
+    #filter(Z >= -1) |>
+  group_by(res, campaign, Z) |>
+  summarise(
+    mean_percentage = mean(percentage, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  arrange(res, campaign, Z) |>
+  ggplot(aes(x = mean_percentage, y = Z, color = campaign, group = campaign)) +
+  geom_point(size = 0.5)
+```

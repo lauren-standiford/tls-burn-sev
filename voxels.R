@@ -170,7 +170,16 @@ prev_data <- read_csv("E:/voxel_data.csv")
 combine <- bind_rows(prev_data, new_campaign)
 write_csv(combine, "E:/voxel_data.csv")
 
+vox <- read_csv("E:/voxel_data.csv")
+mtbs_forest <- read_csv("E:/plots_mtbs_veg.csv")
 
+add_sev_lf <- left_join(
+  data,
+  mtbs_forest,
+  by = c("plot" = "Plot"),
+  relationship = "many-to-one"
+)
+write_csv(add_sev_lf, "E:/voxel_data.csv")
 
 #==============================================================
 #           add fire sev data, forest type, pre/post

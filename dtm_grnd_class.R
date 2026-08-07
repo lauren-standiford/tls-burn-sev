@@ -6,7 +6,7 @@ library(stringr)
 #==============================================================
 
 files <- list.files("E:/c1/new", full.names = TRUE, pattern = '3m\\.las$')
-i = 1
+i = 5
 file_i = files[i]
 
 # check ground classified points
@@ -22,20 +22,17 @@ for (file_i in files) {
 # ground classification
 library(RCSF)
 
+file_i <- "E:/c5/no_c1/c5_tls_p1854_reg2c1_200922.las"
+
 for (file_i in files) {
   message('Processing ', file_i)
   message(i, ' of ', length(files))
   tictoc::tic()
   las = readLAS(file_i)
-  las <- classify_ground(las,
-      algorithm = csf(
-      cloth_resolution = 0.5,
-      rigidness = 1L,
-      class_threshold = 0.1,
-      iterations = 500))
+  las <- classify_ground(las, algorithm = csf(), last_returns = TRUE)
   ground_points <- sum(las$Classification == 2, na.rm = TRUE)
   message('Ground classified points: ', ground_points)
-  ground_file_name <- str_replace(file_i, "\\.las$", "_ground.las")
+  ground_file_name <- str_replace(file_i, "\\.las$", "_ground4.las")
   writeLAS(las, ground_file_name)
   tictoc::toc()
   i = i + 1
@@ -45,9 +42,11 @@ for (file_i in files) {
 #        generate dtms & height normalize initial scans
 #==============================================================
 
-files <- list.files("E:/c1/new", full.names = TRUE, pattern = '3m\\.las$')
+files <- list.files("E:/c1/new", full.names = TRUE, pattern = 'ground2\\.las$')
 i = 1
 file_i = files[i]
+
+file_i <- "E:/c1/c1_tls_p1301_201019_11dot3m.las"
 
 for (file_i in files) {
   message('Processing ', file_i)
