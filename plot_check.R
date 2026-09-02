@@ -67,7 +67,7 @@ df[104, "quality"] <- 1
 #==============================================================
 
 las_files <- list.files("E:/c1/new", full.names = TRUE, pattern = "\\.las$")
-i = 6
+i = 4
 file_i = las_files[i]
 
 for (file_i in las_files) {
@@ -84,7 +84,7 @@ for (file_i in las_files) {
 
 # check crs status
 
-las_files <- list.files("E:/c1/new", full.names = TRUE, pattern = "\\.las$")
+las_files <- list.files("E:/c6/new", full.names = TRUE, pattern = "\\.las$")
 las_files
 #las_ref <- readLAS("E:/c2/c2_tls_p1301_200327_reg2c1.las", filter = '-keep_random_fraction 0.0001')
 #st_crs(las_ref)
@@ -128,8 +128,8 @@ i = i + 1
 #             visualize pre/post fire scans together
 #==============================================================
 
-las1 = readLAS("E:/c1/c1_tls_p1340_201019_11dot3m.las", filter = '-keep_random_fraction 0.001')
-las2 = readLAS("E:/c5/c5_tls_p1340_reg2c1_200922_11dot3m.las", filter = '-keep_random_fraction 0.001')
+las1 = readLAS("E:/c1/new/c1_tls_p1309_200326_11dot3m_ground2.las", filter = '-keep_random_fraction 0.001')
+las2 = readLAS("E:/c5/c5_tls_p1309_reg2c1_200922_v2.las", filter = '-keep_random_fraction 0.001')
 x = plot(las1, pal = "red", bg = "white")
 plot(las2, pal = "blue", bg = "white", add = x)
 
