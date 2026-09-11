@@ -1,11 +1,11 @@
-# Setup
-```{r}
+#
+#
 library(tidyverse)
 data <- read_csv("E:/voxel_data.csv")
-```
-
-# Histograms
-```{r}
+#
+#
+#
+#
 # histograms of percentage filled (at each ht) by resolution
 data |>
   ggplot(aes(x = percentage)) +
@@ -67,20 +67,20 @@ data |>
   facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
   labs(x = "Total percentage filled (by plot)", y = "Number of plots", title = "Total percentage filled by plot by campaign") +
   theme_minimal()
-```
-
-
-# Poking around with stuff
-## Fire severity 
-```{r, number of plots in each severity class/forest type}
+#
+#
+#
+#
+#
+#
 data |> 
   group_by(LF_FOREST, sev_class) |>
   summarise(n_plots = n_distinct(plot), .groups = "drop") |>
   mutate(sev_class = fct_relevel(sev_class, 'Low', 'Moderate', 'High')) |>
   arrange(LF_FOREST, sev_class)
-```
-
-```{r, scatterplot of RBR}
+#
+#
+#
 data |>
     group_by(LF_FOREST, sev_class) |>
     ggplot(aes(x = LF_FOREST, y = RBR, color = sev_class)) +
@@ -88,10 +88,10 @@ data |>
     scale_color_manual(values = c("Low" = "green", "Moderate" = "orange", "High" = "red")) +
     labs(x = "Forest Type", y = "RBR", color = "Severity Class") +
     theme_minimal()
-```
-
-## Volume
-```{r, bar chart total volume by campaign}
+#
+#
+#
+#
 data |>
     filter(campaign %in% c("c1", "c5", "c6", "c10")) |>
     mutate(site = case_when(
@@ -104,9 +104,9 @@ data |>
     geom_col(width = 0.7, position = position_dodge(width = 0.8)) +
     labs(x = "Site", y = "Volume", fill = "Campaign") +
     theme_minimal()
-```
-
-```{r, bar chart total volume by campaign and severity class}
+#
+#
+#
 data |>
     filter(campaign %in% c("c1", "c5", "c6", "c10")) |>
     mutate(site = case_when(
@@ -120,9 +120,9 @@ data |>
     facet_wrap(~ sev_class) +
     labs(x = "Site", y = "Volume", fill = "Campaign") +
     theme_minimal()
-```
-
-```{r, volume summary stats by campaign sev and forest type}
+#
+#
+#
 data |>
     filter(campaign %in% c("c1", "c5", "c6", "c10")) |>
     group_by(plot, campaign, sev_class, LF_FOREST) |>
@@ -138,10 +138,10 @@ data |>
       .groups = "drop"
     ) |>
     arrange(campaign, sev_class, LF_FOREST)
-```
-
-
-```{r}
+#
+#
+#
+#
 data |>
     filter(Z >= 0, res == 0.5, campaign %in% c("c1", "c2", "c6", "c10")) |>
     mutate(prepost = case_when(
@@ -170,10 +170,10 @@ data |>
     )
 
 
-```
-
-## Experiment with voxel sizes
-```{r}
+#
+#
+#
+#
 data |>
     #filter(Z >= -1) |>
   group_by(res, campaign, Z) |>
@@ -184,4 +184,6 @@ data |>
   arrange(res, campaign, Z) |>
   ggplot(aes(x = mean_percentage, y = Z, color = campaign, group = campaign)) +
   geom_point(size = 0.5)
-```
+#
+#
+#
