@@ -4,7 +4,7 @@ library(tidyverse)
 data <- read_csv("E:/voxel_data.csv")
 ```
 
-# Histograms
+# Voxel Histograms
 ```{r}
 # histograms of percentage filled (at each ht) by resolution
 data |>
@@ -12,7 +12,9 @@ data |>
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   facet_wrap(~ res, ncol = 3, labeller = label_both) +
   labs(x = "Percentage", y = "Count", title = "Percentage filled (at each ht) by resolution") +
-  theme_minimal()
+  #theme_minimal() +
+  theme(text = element_text(size = 20))
+### as voxels get smaller/resolution is higher, more of them are classified as empty
 
 # grouped by 5m height bins, all res
 data |>
@@ -27,16 +29,19 @@ data |>
   facet_wrap(~ Z_group, ncol = 3, labeller = label_both) +
   labs(x = "Percentage filled", y = "Count", title = "Percentage filled (at each ht) by 5m height bins") +
   theme_minimal()
+### some Z groups are NA so need to check that out, skewed towards 0
 
-# histogram of sum of percentage filled (by plot), all res
+# histogram of sum of percentage filled (plot level), all res
 data |>
+  filter(campaign == "c1") |>
   group_by(plot, res) |>
   summarise(total_percentage = sum(percentage, na.rm = TRUE), .groups = "drop") |>
   ggplot(aes(x = total_percentage)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   facet_wrap(~ res, ncol = 3, labeller = label_both) +
-  labs(x = "Total percentage filled (by plot)", y = "Count", title = "Total percentage filled (by plot) by resolution") +
-  theme_minimal()
+  labs(x = "Total percentage filled (plot level)", y = "Number of plots", title = "Total percentage filled (plot level) by resolution") +
+  theme(text = element_text(size = 20))
+### it gets more skewed towards lower total % filled as the resolution increases???
 
 # total percentage filled (by plot), all res, all campaigns
 data |>
@@ -45,7 +50,9 @@ data |>
   ggplot(aes(x = total_percentage)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   labs(x = "Total percentage filled (by plot)", y = "Count", title = "Total percentage filled by plot") +
-  theme_minimal()
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+### overall pretty normal distribution when looking at all plots across all campaigns
 
 # total percentage filled by plot by campaign, all res
 data |>
@@ -55,7 +62,9 @@ data |>
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
   labs(x = "Total percentage filled (by plot)", y = "Number of plots (all res)", title = "Total percentage filled by plot by campaign") +
-  theme_minimal()
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+### normal dist for c1 and c10, kind of flat for c2 and c5, skewed towards more filled in c6 (check why some are so high % filled?)
 
 # total percentage filled by plot by campaign, res 0.5
 data |>
@@ -65,8 +74,36 @@ data |>
   ggplot(aes(x = total_percentage)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
-  labs(x = "Total percentage filled (by plot)", y = "Number of plots", title = "Total percentage filled by plot by campaign") +
-  theme_minimal()
+  labs(x = "Total percentage filled (by plot)", y = "Number of plots", title = "Total percentage filled by plot by campaign for res = 0.5") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+### 
+
+# total percentage filled by plot by campaign, res 0.25
+data |>
+  filter(res == 0.25) |>
+  group_by(plot, campaign) |>
+  summarise(total_percentage = sum(percentage, na.rm = TRUE), .groups = "drop") |>
+  ggplot(aes(x = total_percentage)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
+  labs(x = "Total percentage filled (by plot)", y = "Number of plots", title = "Total percentage filled by plot by campaign for res = 0.25") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+### 
+
+# total percentage filled by plot by campaign, res 0.1
+data |>
+  filter(res == 0.1) |>
+  group_by(plot, campaign) |>
+  summarise(total_percentage = sum(percentage, na.rm = TRUE), .groups = "drop") |>
+  ggplot(aes(x = total_percentage)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
+  labs(x = "Total percentage filled (by plot)", y = "Number of plots", title = "Total percentage filled by plot by campaign for res = 0.1") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+### get a higher % filled with smaller voxels
 ```
 
 
