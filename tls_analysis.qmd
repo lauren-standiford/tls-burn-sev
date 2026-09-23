@@ -2,6 +2,7 @@
 ```{r}
 library(tidyverse)
 data <- read_csv("E:/voxel_data.csv")
+data <- read_csv("C:/Users/ltsta/OneDrive/Desktop/voxel_data.csv")
 ```
 
 # Voxel Histograms
@@ -11,7 +12,7 @@ data |>
   ggplot(aes(x = percentage)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   facet_wrap(~ res, ncol = 3, labeller = label_both) +
-  labs(x = "Percentage", y = "Count", title = "Percentage filled (at each ht) by resolution") +
+  labs(x = "Percentage", y = "Count of height levels", title = "Number of height levels by percentage filled for all resolutions") +
   #theme_minimal() +
   theme(text = element_text(size = 20))
 ### as voxels get smaller/resolution is higher, more of them are classified as empty
@@ -27,26 +28,50 @@ data |>
   ggplot(aes(x = percentage)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   facet_wrap(~ Z_group, ncol = 3, labeller = label_both) +
-  labs(x = "Percentage filled", y = "Count", title = "Percentage filled (at each ht) by 5m height bins") +
+  labs(x = "Percentage of voxels filled", y = "Count", title = "Percentage of voxels filled (at each ht) by 5m height bins") +
   theme_minimal()
 ### some Z groups are NA so need to check that out, skewed towards 0
 
 # histogram of sum of percentage filled (plot level), all res
-data |>
-  filter(campaign == "c1") |>
+data2 <- data |>
+  filter(campaign == "c10") |>
   group_by(plot, res) |>
-  summarise(total_percentage = sum(percentage, na.rm = TRUE), .groups = "drop") |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
   ggplot(aes(x = total_percentage)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   facet_wrap(~ res, ncol = 3, labeller = label_both) +
   labs(x = "Total percentage filled (plot level)", y = "Number of plots", title = "Total percentage filled (plot level) by resolution") +
   theme(text = element_text(size = 20))
-### it gets more skewed towards lower total % filled as the resolution increases???
+### c6 has a more dramatic shift between resolutions than c1, consistent with c10
+
+# boxplot of total percentage filled (by plot), all res, all campaigns
+data |>
+  group_by(plot, res, campaign) |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
+   mutate(site = case_when(
+      campaign %in% c("c1", "c2", "c5") ~ "pepperwood",
+      campaign %in% c("c6", "c10") ~ "saddle_mtn"
+    )) |>
+  ggplot(aes(x = campaign, y = total_percentage)) +
+  geom_boxplot() +
+  facet_wrap(~ site, ncol = 2, labeller = label_both) +
+  theme(text = element_text(size = 20))
+
+# boxplot of total percentage filled (plot level) by campaign and resolution
+data |>
+  group_by(plot, res, campaign) |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
+  ggplot(aes(x = campaign, y = total_percentage)) +
+  geom_boxplot() +
+  facet_wrap(~ res, ncol = 3, labeller = label_both) +
+  theme(text = element_text(size = 20)) +
+  labs(x = "Campaign", y = "Total percentage filled (plot level)", title = "Total percentage filled (plot level) by campaign and resolution")
+### behaves as expected, similar trends within each res, general increasing amount of total volume filled as voxel size increases. how to test stat sig?
 
 # total percentage filled (by plot), all res, all campaigns
 data |>
   group_by(plot, campaign) |>
-  summarise(total_percentage = sum(percentage, na.rm = TRUE), .groups = "drop") |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
   ggplot(aes(x = total_percentage)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   labs(x = "Total percentage filled (by plot)", y = "Count", title = "Total percentage filled by plot") +
@@ -57,7 +82,7 @@ data |>
 # total percentage filled by plot by campaign, all res
 data |>
   group_by(plot, campaign) |>
-  summarise(total_percentage = sum(percentage, na.rm = TRUE), .groups = "drop") |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
   ggplot(aes(x = total_percentage)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
@@ -65,12 +90,21 @@ data |>
   theme_minimal() +
   theme(text = element_text(size = 20))
 ### normal dist for c1 and c10, kind of flat for c2 and c5, skewed towards more filled in c6 (check why some are so high % filled?)
+data |>
+  group_by(plot, campaign) |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
+  ggplot(aes(x = total_percentage)) +
+  geom_point(x = "plot", y = "total_percentage") +
+  facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
+  labs(x = "Total percentage filled (by plot)", y = "Number of plots (all res)", title = "Total percentage filled by plot by campaign") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
 
 # total percentage filled by plot by campaign, res 0.5
 data |>
   filter(res == 0.5) |>
   group_by(plot, campaign) |>
-  summarise(total_percentage = sum(percentage, na.rm = TRUE), .groups = "drop") |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
   ggplot(aes(x = total_percentage)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
@@ -83,7 +117,7 @@ data |>
 data |>
   filter(res == 0.25) |>
   group_by(plot, campaign) |>
-  summarise(total_percentage = sum(percentage, na.rm = TRUE), .groups = "drop") |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
   ggplot(aes(x = total_percentage)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
@@ -96,7 +130,7 @@ data |>
 data |>
   filter(res == 0.1) |>
   group_by(plot, campaign) |>
-  summarise(total_percentage = sum(percentage, na.rm = TRUE), .groups = "drop") |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
   ggplot(aes(x = total_percentage)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
@@ -105,6 +139,32 @@ data |>
   theme(text = element_text(size = 20))
 ### get a higher % filled with smaller voxels
 ```
+
+# Fire severity
+```{r}
+# RdNBR vs RBR
+data |>
+  group_by(plot, campaign) |>
+  ggplot(aes(x = RdNBR, y = RBR)) +
+  geom_point(size = 3) +
+  theme(text = element_text(size = 20))
+
+lm <- lm(RBR ~ RdNBR, data = data)
+summary(lm)
+
+# RdNBR vs Rdnbr3x3
+data |>
+  group_by(plot, campaign) |>
+  ggplot(aes(x = RdNBR, y = RdNBR3x3)) +
+  geom_point(size = 3) +
+  geom_line(aes(x = RdNBR, y = RdNBR), color = "red", linetype = "solid") +
+  labs(x = "RdNBR", y = "RdNBR3x3", title = "Comparison of RdNBR and RdNBR3x3") +
+  theme(text = element_text(size = 20))
+
+lm <- lm(RdNBR3x3 ~ RdNBR, data = data)
+summary(lm)
+```
+
 
 
 # Poking around with stuff
