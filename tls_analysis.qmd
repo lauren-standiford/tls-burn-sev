@@ -5,6 +5,52 @@ data <- read_csv("E:/voxel_data.csv")
 data <- read_csv("C:/Users/ltsta/OneDrive/Desktop/voxel_data.csv")
 ```
 
+# Number of scans etc
+```{r}
+# number of plots in each forest type
+data |>
+  distinct(plot, LF_FOREST) |>
+  summarise(
+    n_plots = n_distinct(plot),
+    n_hw = sum(LF_FOREST == "Hardwood Forest", na.rm = TRUE),
+    n_con = sum(LF_FOREST == "Conifer Forest", na.rm = TRUE),
+    n_mix = sum(LF_FOREST == "Mixed Conifer-Hardwood Forest", na.rm = TRUE),
+  )
+
+# number of plots in each campaign
+data |>
+  distinct(plot, campaign) |>
+  summarise(
+    n_plots = n_distinct(plot),
+    n_c1 = sum(campaign == "c1", na.rm = TRUE),
+    n_c2 = sum(campaign == "c2", na.rm = TRUE),
+    n_c5 = sum(campaign == "c5", na.rm = TRUE),
+    n_c6 = sum(campaign == "c6", na.rm = TRUE),
+    n_c10 = sum(campaign == "c10", na.rm = TRUE)
+  )
+
+# number of plots in each campaign and forest type
+data |>
+  distinct(plot, campaign, LF_FOREST) |>
+  group_by(campaign, LF_FOREST) |>
+  summarise(n_plots = n_distinct(plot), .groups = "drop") |>
+  arrange(campaign, LF_FOREST)
+
+# number of plots in each forest type by preserve
+data |>
+  distinct(plot, LF_FOREST, campaign) |>
+  mutate(preserve = case_when(
+      campaign %in% c("c1", "c2", "c5") ~ "pepperwood",
+      campaign %in% c("c6", "c10") ~ "saddle_mtn"
+    )) |>
+  group_by(preserve, LF_FOREST) |>
+  summarise(n_plots = n_distinct(plot), .groups = "drop") |>
+  arrange(preserve, LF_FOREST)
+## saddle mtn has more conifer plots, mixed and hw about the same
+
+# 
+```
+
 # Voxel Histograms
 ```{r}
 # histograms of percentage filled (at each ht) by resolution
@@ -63,6 +109,7 @@ data |>
   summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
   ggplot(aes(x = campaign, y = total_percentage)) +
   geom_boxplot() +
+  geom_point() +
   facet_wrap(~ res, ncol = 3, labeller = label_both) +
   theme(text = element_text(size = 20)) +
   labs(x = "Campaign", y = "Total percentage filled (plot level)", title = "Total percentage filled (plot level) by campaign and resolution")
@@ -152,7 +199,7 @@ data |>
 lm <- lm(RBR ~ RdNBR, data = data)
 summary(lm)
 
-# RdNBR vs Rdnbr3x3
+# RdNBR vs RdNBR3x3
 data |>
   group_by(plot, campaign) |>
   ggplot(aes(x = RdNBR, y = RdNBR3x3)) +
@@ -163,6 +210,45 @@ data |>
 
 lm <- lm(RdNBR3x3 ~ RdNBR, data = data)
 summary(lm)
+
+#histograms of metrics
+#RdNBR
+data |>
+  filter(res == 0.1) |>
+  filter(campaign %in% c("c1", "c6")) |>
+  distinct(plot, campaign, RdNBR) |>
+  ggplot(aes(x = RdNBR)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
+  labs(x = "RdNBR", y = "Number of plots", title = "Histogram of RdNBR") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+## saddle mtn has a more normal distrubution for RdNBR vs pepperwood (skewed towards lower values)
+
+#RdNBR3x3
+data |>
+  filter(res == 0.1) |>
+  filter(campaign %in% c("c1", "c6")) |>
+  distinct(plot, campaign, RdNBR3x3) |>
+  ggplot(aes(x = RdNBR3x3)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
+  labs(x = "RdNBR3x3", y = "Number of plots", title = "Histogram of RdNBR3x3") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+
+#RBR
+data |>
+  filter(res == 0.1) |>
+  filter(campaign %in% c("c1", "c6")) |>
+  distinct(plot, campaign, RBR) |>
+  ggplot(aes(x = RBR)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
+  labs(x = "RBR", y = "Number of plots", title = "Histogram of RBR") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+## RBR has some weird high values in c1 that don't show up in RdNBR, and c6 is a similar distribution but maybe lower overall? How should they compare?
 ```
 
 
