@@ -1,0 +1,372 @@
+#
+#
+library(tidyverse)
+data <- read_csv("E:/voxel_data.csv")
+data <- read_csv("C:/Users/ltsta/OneDrive/Desktop/voxel_data.csv")
+#
+#
+#
+#
+# number of plots in each forest type
+data |>
+  distinct(plot, LF_FOREST) |>
+  summarise(
+    n_plots = n_distinct(plot),
+    n_hw = sum(LF_FOREST == "Hardwood Forest", na.rm = TRUE),
+    n_con = sum(LF_FOREST == "Conifer Forest", na.rm = TRUE),
+    n_mix = sum(LF_FOREST == "Mixed Conifer-Hardwood Forest", na.rm = TRUE),
+  )
+
+# number of plots in each campaign
+data |>
+  distinct(plot, campaign) |>
+  summarise(
+    n_plots = n_distinct(plot),
+    n_c1 = sum(campaign == "c1", na.rm = TRUE),
+    n_c2 = sum(campaign == "c2", na.rm = TRUE),
+    n_c5 = sum(campaign == "c5", na.rm = TRUE),
+    n_c6 = sum(campaign == "c6", na.rm = TRUE),
+    n_c10 = sum(campaign == "c10", na.rm = TRUE)
+  )
+
+# number of plots in each campaign and forest type
+data |>
+  distinct(plot, campaign, LF_FOREST) |>
+  group_by(campaign, LF_FOREST) |>
+  summarise(n_plots = n_distinct(plot), .groups = "drop") |>
+  arrange(campaign, LF_FOREST)
+
+# number of plots in each forest type by preserve
+data |>
+  distinct(plot, LF_FOREST, campaign) |>
+  mutate(preserve = case_when(
+      campaign %in% c("c1", "c2", "c5") ~ "pepperwood",
+      campaign %in% c("c6", "c10") ~ "saddle_mtn"
+    )) |>
+  group_by(preserve, LF_FOREST) |>
+  summarise(n_plots = n_distinct(plot), .groups = "drop") |>
+  arrange(preserve, LF_FOREST)
+## saddle mtn has more conifer plots, mixed and hw about the same
+
+# 
+#
+#
+#
+#
+# histograms of percentage filled (at each ht) by resolution
+data |>
+  ggplot(aes(x = percentage)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ res, ncol = 3, labeller = label_both) +
+  labs(x = "Percentage", y = "Count of height levels", title = "Number of height levels by percentage filled for all resolutions") +
+  #theme_minimal() +
+  theme(text = element_text(size = 20))
+### as voxels get smaller/resolution is higher, more of them are classified as empty
+
+# grouped by 5m height bins, all res
+data |>
+  mutate(Z_group = cut(
+    Z,
+    breaks = seq(0, max(Z, na.rm = TRUE) + 5, by = 5),
+    right = FALSE,
+    include.lowest = TRUE
+  )) |>
+  ggplot(aes(x = percentage)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ Z_group, ncol = 3, labeller = label_both) +
+  labs(x = "Percentage of voxels filled", y = "Count", title = "Percentage of voxels filled (at each ht) by 5m height bins") +
+  theme_minimal()
+### some Z groups are NA so need to check that out, skewed towards 0
+
+# histogram of sum of percentage filled (plot level), all res
+data2 <- data |>
+  filter(campaign == "c10") |>
+  group_by(plot, res) |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
+  ggplot(aes(x = total_percentage)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ res, ncol = 3, labeller = label_both) +
+  labs(x = "Total percentage filled (plot level)", y = "Number of plots", title = "Total percentage filled (plot level) by resolution") +
+  theme(text = element_text(size = 20))
+### c6 has a more dramatic shift between resolutions than c1, consistent with c10
+
+# boxplot of total percentage filled (by plot), all res, all campaigns
+data |>
+  group_by(plot, res, campaign) |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
+   mutate(site = case_when(
+      campaign %in% c("c1", "c2", "c5") ~ "pepperwood",
+      campaign %in% c("c6", "c10") ~ "saddle_mtn"
+    )) |>
+  ggplot(aes(x = campaign, y = total_percentage)) +
+  geom_boxplot() +
+  facet_wrap(~ site, ncol = 2, labeller = label_both) +
+  theme(text = element_text(size = 20))
+
+# boxplot of total percentage filled (plot level) by campaign and resolution
+data |>
+  group_by(plot, res, campaign) |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
+  ggplot(aes(x = campaign, y = total_percentage)) +
+  geom_boxplot() +
+  geom_point() +
+  facet_wrap(~ res, ncol = 3, labeller = label_both) +
+  theme(text = element_text(size = 20)) +
+  labs(x = "Campaign", y = "Total percentage filled (plot level)", title = "Total percentage filled (plot level) by campaign and resolution")
+### behaves as expected, similar trends within each res, general increasing amount of total volume filled as voxel size increases. how to test stat sig?
+
+# total percentage filled (by plot), all res, all campaigns
+data |>
+  group_by(plot, campaign) |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
+  ggplot(aes(x = total_percentage)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  labs(x = "Total percentage filled (by plot)", y = "Count", title = "Total percentage filled by plot") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+### overall pretty normal distribution when looking at all plots across all campaigns
+
+# total percentage filled by plot by campaign, all res
+data |>
+  group_by(plot, campaign) |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
+  ggplot(aes(x = total_percentage)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
+  labs(x = "Total percentage filled (by plot)", y = "Number of plots (all res)", title = "Total percentage filled by plot by campaign") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+### normal dist for c1 and c10, kind of flat for c2 and c5, skewed towards more filled in c6 (check why some are so high % filled?)
+data |>
+  group_by(plot, campaign) |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
+  ggplot(aes(x = total_percentage)) +
+  geom_point(x = "plot", y = "total_percentage") +
+  facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
+  labs(x = "Total percentage filled (by plot)", y = "Number of plots (all res)", title = "Total percentage filled by plot by campaign") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+
+# total percentage filled by plot by campaign, res 0.5
+data |>
+  filter(res == 0.5) |>
+  group_by(plot, campaign) |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
+  ggplot(aes(x = total_percentage)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
+  labs(x = "Total percentage filled (by plot)", y = "Number of plots", title = "Total percentage filled by plot by campaign for res = 0.5") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+### 
+
+# total percentage filled by plot by campaign, res 0.25
+data |>
+  filter(res == 0.25) |>
+  group_by(plot, campaign) |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
+  ggplot(aes(x = total_percentage)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
+  labs(x = "Total percentage filled (by plot)", y = "Number of plots", title = "Total percentage filled by plot by campaign for res = 0.25") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+### 
+
+# total percentage filled by plot by campaign, res 0.1
+data |>
+  filter(res == 0.1) |>
+  group_by(plot, campaign) |>
+  summarise(total_percentage = ((sum(n_filled, na.rm = TRUE))/(sum(n_voxel, na.rm = TRUE)))*100, .groups = "drop") |>
+  ggplot(aes(x = total_percentage)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
+  labs(x = "Total percentage filled (by plot)", y = "Number of plots", title = "Total percentage filled by plot by campaign for res = 0.1") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+### get a higher % filled with smaller voxels
+#
+#
+#
+#
+# RdNBR vs RBR
+data |>
+  group_by(plot, campaign) |>
+  ggplot(aes(x = RdNBR, y = RBR)) +
+  geom_point(size = 3) +
+  theme(text = element_text(size = 20))
+
+lm <- lm(RBR ~ RdNBR, data = data)
+summary(lm)
+
+# RdNBR vs RdNBR3x3
+data |>
+  group_by(plot, campaign) |>
+  ggplot(aes(x = RdNBR, y = RdNBR3x3)) +
+  geom_point(size = 3) +
+  geom_line(aes(x = RdNBR, y = RdNBR), color = "red", linetype = "solid") +
+  labs(x = "RdNBR", y = "RdNBR3x3", title = "Comparison of RdNBR and RdNBR3x3") +
+  theme(text = element_text(size = 20))
+
+lm <- lm(RdNBR3x3 ~ RdNBR, data = data)
+summary(lm)
+
+#histograms of metrics
+#RdNBR
+data |>
+  filter(res == 0.1) |>
+  filter(campaign %in% c("c1", "c6")) |>
+  distinct(plot, campaign, RdNBR) |>
+  ggplot(aes(x = RdNBR)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
+  labs(x = "RdNBR", y = "Number of plots", title = "Histogram of RdNBR") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+## saddle mtn has a more normal distrubution for RdNBR vs pepperwood (skewed towards lower values)
+
+#RdNBR3x3
+data |>
+  filter(res == 0.1) |>
+  filter(campaign %in% c("c1", "c6")) |>
+  distinct(plot, campaign, RdNBR3x3) |>
+  ggplot(aes(x = RdNBR3x3)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
+  labs(x = "RdNBR3x3", y = "Number of plots", title = "Histogram of RdNBR3x3") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+
+#RBR
+data |>
+  filter(res == 0.1) |>
+  filter(campaign %in% c("c1", "c6")) |>
+  distinct(plot, campaign, RBR) |>
+  ggplot(aes(x = RBR)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ campaign, ncol = 2, labeller = label_both) +
+  labs(x = "RBR", y = "Number of plots", title = "Histogram of RBR") +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+## RBR has some weird high values in c1 that don't show up in RdNBR, and c6 is a similar distribution but maybe lower overall? How should they compare?
+#
+#
+#
+#
+#
+#
+#
+data |> 
+  group_by(LF_FOREST, sev_class) |>
+  summarise(n_plots = n_distinct(plot), .groups = "drop") |>
+  mutate(sev_class = fct_relevel(sev_class, 'Low', 'Moderate', 'High')) |>
+  arrange(LF_FOREST, sev_class)
+#
+#
+#
+data |>
+    group_by(LF_FOREST, sev_class) |>
+    ggplot(aes(x = LF_FOREST, y = RBR, color = sev_class)) +
+    geom_point(size = 3) +
+    scale_color_manual(values = c("Low" = "green", "Moderate" = "orange", "High" = "red")) +
+    labs(x = "Forest Type", y = "RBR", color = "Severity Class") +
+    theme_minimal()
+#
+#
+#
+#
+data |>
+    filter(campaign %in% c("c1", "c5", "c6", "c10")) |>
+    mutate(site = case_when(
+      campaign %in% c("c1", "c5") ~ "pepperwood",
+      campaign %in% c("c6", "c10") ~ "saddle mtn"
+    )) |>
+    group_by(site, campaign) |>
+    summarise(total_volume = sum(percentage, na.rm = TRUE), .groups = "drop") |>
+    ggplot(aes(x = site, y = total_volume, fill = campaign)) +
+    geom_col(width = 0.7, position = position_dodge(width = 0.8)) +
+    labs(x = "Site", y = "Volume", fill = "Campaign") +
+    theme_minimal()
+#
+#
+#
+data |>
+    filter(campaign %in% c("c1", "c5", "c6", "c10")) |>
+    mutate(site = case_when(
+      campaign %in% c("c1", "c5") ~ "pepperwood",
+      campaign %in% c("c6", "c10") ~ "saddle mtn"
+    )) |>
+    group_by(sev_class, site, campaign) |>
+    summarise(total_volume = sum(percentage, na.rm = TRUE), .groups = "drop") |>
+    ggplot(aes(x = site, y = total_volume, fill = campaign)) +
+    geom_col(width = 0.7, position = position_dodge(width = 0.8)) +
+    facet_wrap(~ sev_class) +
+    labs(x = "Site", y = "Volume", fill = "Campaign") +
+    theme_minimal()
+#
+#
+#
+data |>
+    filter(campaign %in% c("c1", "c5", "c6", "c10")) |>
+    group_by(plot, campaign, sev_class, LF_FOREST) |>
+    summarise(total_volume = sum(percentage, na.rm = TRUE), .groups = "drop") |>
+    group_by(campaign, sev_class, LF_FOREST) |>
+    summarise(
+      n_plots = n(),
+      mean_volume = mean(total_volume, na.rm = TRUE),
+      median_volume = median(total_volume, na.rm = TRUE),
+      sd_volume = sd(total_volume, na.rm = TRUE),
+      q1_volume = quantile(total_volume, 0.25, na.rm = TRUE),
+      q3_volume = quantile(total_volume, 0.75, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    arrange(campaign, sev_class, LF_FOREST)
+#
+#
+#
+#
+data |>
+    filter(Z >= 0, res == 0.5, campaign %in% c("c1", "c2", "c6", "c10")) |>
+    mutate(prepost = case_when(
+        campaign %in% c("c1", "c6") ~ "pre",
+        campaign %in% c("c2", "c10") ~ "post")) |>
+    mutate(
+      Z_group = cut(
+        Z,
+        breaks = seq(0, max(Z, na.rm = TRUE) + 5, by = 5),
+        right = FALSE,
+        include.lowest = TRUE
+      )
+    ) |>
+    group_by(Z_group, prepost, sev_class) |>
+    summarise(
+      mean_percentage = mean(percentage, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    ggplot(aes(x = mean_percentage, y = Z_group, color = prepost, shape = prepost)) +
+    geom_point(size = 2, position = position_dodge(width = 0.4)) +
+    facet_wrap(~ sev_class) +
+    labs(
+      x = "Mean percentage",
+      y = "Z group (5 m bins)",
+      color = "Pre/Post"
+    )
+
+
+#
+#
+#
+#
+data |>
+    #filter(Z >= -1) |>
+  group_by(res, campaign, Z) |>
+  summarise(
+    mean_percentage = mean(percentage, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  arrange(res, campaign, Z) |>
+  ggplot(aes(x = mean_percentage, y = Z, color = campaign, group = campaign)) +
+  geom_point(size = 0.5)
+#
+#
+#
