@@ -34,6 +34,24 @@ ba <- data |>
     summarize(ba_m2_17 = sum(ba_m2_17))
 view(ba)
 
+# using BFA
+library(BerkeleyForestsAnalytics)
+
+ba <- data |>
+    select(Plot, Species, fate4.18, DBH_cm.18) |>
+    rename(plot = Plot, species = Species, status = fate4.18, dbh = DBH_cm.18) |>
+    mutate(site = "PPW", exp_factor = 50, status = case_when(
+    status %in% c("LN", "LR") ~ 1,
+    status %in% c("DN", "DR") ~ 0,
+    TRUE ~ NA_real_)) |>
+    filter(dbh > 10, species != "ARCMAN")
+
+ba$status <- as.character(ba$status)
+ba
+
+comp <- ForestComp(data = ba)
+comp
+write_csv(comp, "E:/PPW_ba_dom.csv")
 
 ```
 

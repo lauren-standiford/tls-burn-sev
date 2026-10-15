@@ -368,3 +368,54 @@ data |>
   ggplot(aes(x = mean_percentage, y = Z, color = campaign, group = campaign)) +
   geom_point(size = 0.5)
 ```
+
+# modelling stuff experimenting
+```{r}
+lmdata <- data |>
+  filter(res == 0.5) |>
+  filter(campaign %in% c("c1", "c5", "c6", "c10")) |>
+  filter(!LF_FOREST %in% c("Mixed Conifer-Hardwood Forest")) |>
+  group_by(plot, campaign) |>
+  summarise(
+    total_percentage =
+      (sum(n_filled, na.rm = TRUE) / sum(n_voxel, na.rm = TRUE)) * 100,
+    LF_FOREST = first(LF_FOREST),
+    RBR = first(RBR),
+    .preserve = first(case_when(
+      campaign %in% c("c1", "c5") ~ "pepperwood",
+      campaign %in% c("c6", "c10") ~ "saddle_mtn"
+    )),
+    .groups = "drop"
+  ) |>
+  rename(preserve = .preserve) |>
+  group_by(plot) |>
+  mutate(
+    veg = case_when(
+      campaign %in% c("c1", "c5") ~
+        first(total_percentage[campaign == "c5"], default = NA_real_) -
+        first(total_percentage[campaign == "c1"], default = NA_real_),
+      campaign %in% c("c6", "c10") ~
+        first(total_percentage[campaign == "c6"], default = NA_real_) -
+        first(total_percentage[campaign == "c10"], default = NA_real_),
+      TRUE ~ NA_real_
+    )
+  ) |>
+  ungroup() |>
+  distinct(plot, preserve, LF_FOREST, RBR, veg)
+
+lmdata |>
+  ggplot(aes(x = RBR, y = veg, color = LF_FOREST)) +
+  geom_point(size = 3) +
+  labs(
+    x = "RBR",
+    y = "Difference in total percentage filled (post - pre)",
+    color = "Forest Type"
+  ) +
+  theme_minimal() +
+  theme(text = element_text(size = 20))
+
+lmdata$LF_FOREST <- as.factor(lmdata$LF_FOREST)
+lmdata$preserve <- as.factor(lmdata$preserve)
+
+summary(lm(veg ~ RBR + LF_FOREST + preserve + (RBR * LF_FOREST), data = lmdata))
+```
